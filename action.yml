@@ -1,0 +1,29 @@
+name: Setup Fastlane Environment
+description: Sets up Ruby, installs Bundler, and provides a Fastfile.
+author: DigitalDementia
+inputs:
+  ruby_version:
+    description: 'Ruby version to use'
+    required: false
+    default: '3.3'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ inputs.ruby_version }}
+        bundler-cache: true
+
+    - name: Install Fastlane and other dependencies
+      run: |
+        bundle config set path 'vendor/bundle'
+        bundle install --gemfile=$GITHUB_ACTION_PATH/Gemfile
+      shell: bash
+
+    - name: Copy the Fastfile and any custom actions
+      run: |
+        mkdir -p ./fastlane
+        rsync -av --delete $GITHUB_ACTION_PATH/fastlane/ ./fastlane/
+      shell: bash
