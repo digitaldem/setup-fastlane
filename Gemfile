@@ -1,0 +1,12 @@
+source "https://rubygems.org"
+
+gem "fastlane", "2.226.0"
+gem "abbrev", "~> 0.1.2"
+gem "cocoapods", "~> 1.16.2"
+gem "dotenv", "~> 2.8.1"
+gem "git", "~> 2.3.1"
+gem "logger", "~> 1.6.1"
+gem "mutex_m", "~> 0.2.0"
+gem "ostruct", "~> 0.6.0"
+gem "version", "~> 1.1.1"
+gem "xcodeproj", "~> 1.27.0"
