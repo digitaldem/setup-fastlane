@@ -1,0 +1,303 @@
+opt_out_usage
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+require "fastlane"
+require "dotenv"
+require "fileutils"
+require "git"
+require "match/encryption/encryption"
+require "tempfile"
+
+# Skip README.md creation
+Fastlane::Actions::SkipDocsAction.run(nil)
+
+# Load .env (local)
+if File.exist?(".env")
+  Dotenv.load(".env")
+end
+
+
+git_user = ENV["GIT_USER"].split(":")
+signing_assets_path = "/tmp/SigningAssets"
+keychains_path = "~/Library/Keychains"
+platforms = {
+  ios: "ipa",
+  android: "appbundle",
+  web: "web"
+}
+
+desc "Uses Match for initial signing certificate and provisioning profile generation"
+lane :initial_provisioning do
+  # Remove the build keychain
+  if File.exist?("#{keychains_path}/#{ENV["KEYCHAIN"]}-db")
+    delete_keychain(
+      name: ENV["KEYCHAIN"]
+    )
+  end
+  
+  # Create the temp keychain
+  create_keychain(
+    name: ENV["KEYCHAIN"],
+    password: ENV["MATCH_PASSWORD"],
+    default_keychain: true,
+    unlock: true,
+    timeout: 3600
+  )
+
+  # Clear or create the signing assets destination
+  if Dir.exist?(signing_assets_path)
+    FileUtils.rm_rf(Dir.glob("#{signing_assets_path}/*"))
+  else
+    FileUtils.mkdir_p(signing_assets_path)
+  end
+    
+  # Clone the signing assets repo
+  Tempfile.create("git_ssh_key") do |file|
+    file.write(ENV["GIT_SSH_KEY"])
+    file.chmod(0600)
+    file.flush
+    ENV["GIT_SSH_COMMAND"] = "ssh -i #{file.path} -o IdentitiesOnly=yes"
+    repo = Git.clone(ENV["KEYS_GIT_URL"], signing_assets_path)
+    repo.config('user.name', git_user[0], global: false)
+    repo.config('user.email', git_user[1], global: false)
+
+    # Create Google Play Store key in the keystore file
+    google_keystore = "keystores/google.jks"
+    if File.exist?("#{signing_assets_path}/#{google_keystore}")
+      decrypt("#{signing_assets_path}/#{google_keystore}")
+    end
+    id_segments = ENV["APP_IDENTIFIER"].split(".")
+    keytool(
+      command: "genkey",
+      keystore_path: "#{signing_assets_path}/#{google_keystore}",
+      keystore_password: ENV["MATCH_PASSWORD"],
+      key_alias: ENV["APP_IDENTIFIER"],
+      key_algorithm: "RSA",
+      key_size: 2048,
+      validity: 10000,
+      dname: "CN=#{id_segments.pop}, O=#{id_segments.pop}, OU=#{id_segments.pop}, L=City, S=State, C=US",
+      verbose: true
+    )
+    encrypt("#{signing_assets_path}/#{google_keystore}")
+    repo.add(google_keystore)
+    repo.commit("[fastlane] Updated keystore and platform android")
+    repo.push
+
+    # Create signing certs and provisioning profiles with match
+    match(
+      keychain_name: ENV["KEYCHAIN"],
+      keychain_password: ENV["MATCH_PASSWORD"],  
+      git_url: signing_assets_path,
+      app_identifier: ENV["APP_IDENTIFIER"],
+      api_key: app_store_connect_api_key(
+        key_content: ENV["APP_STORE_KEY"],
+        key_id: ENV["APP_STORE_KEY_ID"],
+        issuer_id: ENV["APP_STORE_ISSUER_ID"],
+        in_house: false),
+      platform: "ios",
+      type: "appstore",
+      additional_cert_types: "mac_installer_distribution",
+      generate_apple_certs: true,
+      include_mac_in_profiles: true,
+      readonly: false,
+      force: true,
+      verbose: true
+    )
+  end
+end
+
+desc "Import keystores, certificates and provisioning profiles"
+lane :import_signingassets do
+  # Remove the build keychain
+  if File.exist?("#{keychains_path}/#{ENV["KEYCHAIN"]}-db")
+    delete_keychain(
+      name: ENV["KEYCHAIN"]
+    )
+  end
+    
+  # Create the temp keychain
+  create_keychain(
+    name: ENV["KEYCHAIN"],
+    password: ENV["MATCH_PASSWORD"],
+    default_keychain: true,
+    unlock: true,
+    timeout: 3600
+  )
+
+  # Clean the signing assets repo
+  if Dir.exist?(signing_assets_path)
+    FileUtils.rm_rf(Dir.glob("#{signing_assets_path}/*"))
+  else
+    FileUtils.mkdir_p(signing_assets_path)
+  end
+  
+  # Clone the signing assets repo
+  Tempfile.create("git_ssh_key") do |file|
+    file.write(ENV["GIT_SSH_KEY"])
+    file.chmod(0600)
+    file.flush
+    ENV["GIT_SSH_COMMAND"] = "ssh -i #{file.path} -o IdentitiesOnly=yes"
+    repo = Git.clone(ENV["KEYS_GIT_URL"], signing_assets_path)
+
+    # Generate Google keystore properties from the repo
+    google_keystore = "keystores/google.jks"
+    if File.exist?("#{signing_assets_path}/#{google_keystore}")
+      decrypt("#{signing_assets_path}/#{google_keystore}")
+      File.open("../android/key.properties", "w") do |file|
+        file.puts "storeFile=#{signing_assets_path}/#{google_keystore}"
+        file.puts "storePassword=#{ENV["MATCH_PASSWORD"]}"
+        file.puts "keyAlias=#{ENV["APP_IDENTIFIER"]}"
+        file.puts "keyPassword=#{ENV["MATCH_PASSWORD"]}"
+      end
+    end
+    
+    # Install iOS certs and profiles from the repo
+    match(
+      keychain_name: ENV["KEYCHAIN"],
+      keychain_password: ENV["MATCH_PASSWORD"],  
+      git_url: signing_assets_path,
+      app_identifier: ENV["APP_IDENTIFIER"],
+      api_key: app_store_connect_api_key(
+        key_content: ENV["APP_STORE_KEY"],
+        key_id: ENV["APP_STORE_KEY_ID"],
+        issuer_id: ENV["APP_STORE_ISSUER_ID"],
+        in_house: false),
+      platform: "ios",
+      type: "appstore",
+      additional_cert_types: "mac_installer_distribution",
+      generate_apple_certs: true,
+      include_mac_in_profiles: true,
+      readonly: true,
+      force: false,
+      verbose: false
+    )
+  end
+end
+
+desc "Clean the flutter projects"
+lane :flutter_clean do
+  Dir.chdir("..") do
+    # Remove build artifacts from any previous runs
+    if Dir.exist?("./build")
+      FileUtils.rm_rf(Dir.glob("./build/*"))
+    end
+
+    # Remove test reports from any previous runs
+    if Dir.exist?("./coverage")
+      FileUtils.rm_rf(Dir.glob("./coverage/*"))
+    end
+
+    # Run flutter clean to clear the workspace
+    result = execute_command("flutter clean")
+  end
+end
+
+desc "Get flutter dependencies"
+lane :flutter_pub do
+  Dir.chdir("..") do
+    # Run flutter pub get to install package dependencies
+    result = execute_command("flutter pub get")
+
+    # Run flutter build_runner to output generated code
+    result = execute_command("flutter pub run build_runner build --delete-conflicting-outputs")
+  end
+end
+
+desc "Run flutter unit tests with coverage report"
+lane :flutter_test do
+  Dir.chdir("..") do
+    # Run flutter test to execute unit tests
+    result = execute_command("flutter test --coverage --reporter json")
+    File.open("./coverage/results.json", "w") do |file|
+      file.write(result)
+    end
+  end
+end
+
+desc "Run flutter build for all target platforms"
+lane :flutter_build do
+  Dir.chdir("..") do
+    version = increment_version_patch()
+    number = version.split(".").map { |segment| segment.rjust(3, "0") }.join.to_i
+    
+    platforms.each do |platform, artifact|
+      # Run flutter build in to create release artifact
+      result = execute_command("flutter build #{artifact} --release --build-name #{version} --build-number #{number}")
+    end
+  end
+end
+
+# Helper functions
+def execute_command(cmd)
+  UI.command(cmd)
+  output, status = Open3.capture2(cmd, err: [:child, :out])
+  unless status.success?
+    UI.user_error!("== Command Failed ==\nExit Status: #{status.exitstatus}\nOutput: #{output}")
+  end
+  output
+end
+
+def encrypt(file)
+  cryptor = Match::Encryption::MatchFileEncryption.new
+  cryptor.encrypt(file_path: file, password: ENV["MATCH_PASSWORD"])
+end
+
+def decrypt(file)
+  cryptor = Match::Encryption::MatchFileEncryption.new
+  cryptor.decrypt(file_path: file, password: ENV["MATCH_PASSWORD"])
+end
+
+def increment_version_patch()
+  # Check the latest version string in Test Flight
+  app_store_build_number(
+    api_key: app_store_connect_api_key(
+      key_content: ENV["APP_STORE_KEY"],
+      key_id: ENV["APP_STORE_KEY_ID"],
+      issuer_id: ENV["APP_STORE_ISSUER_ID"],
+      in_house: false),
+    app_identifier: ENV["APP_IDENTIFIER"],
+    live: false,
+    platform: "ios"
+  )
+  ios_version = lane_context[SharedValues::LATEST_VERSION]
+
+  # Check the latest version string in Google Play
+  play_store_build_number(
+    api_key: ENV["PLAY_STORE_KEY"],
+    app_identifier: ENV["APP_IDENTIFIER"],
+    live: false,
+    platform: "android"
+  )
+  android_version = lane_context[SharedValues::LATEST_VERSION]
+
+  # Check the latest version string on the web
+  web_build_number(
+    api_key: "",
+    app_identifier: ENV["APP_IDENTIFIER"],
+    live: false,
+    platform: "web"
+  )
+  web_version = lane_context[SharedValues::LATEST_VERSION]
+
+  # Select the highest existing version number
+  latest_version = [Gem::Version.new(ios_version), Gem::Version.new(android_version), Gem::Version.new(web_version)].max
+
+  # Increment the version patch segment
+  version_segments = latest_version.segments
+  while version_segments.length < 3
+    version_segments << 0
+  end
+  version_segments[2] += 1
+  new_version = version_segments.join(".")
+  UI.success("Setting the new version as #{new_version}")
+  new_version
+end
