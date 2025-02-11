@@ -14,8 +14,14 @@ require "fastlane"
 require "dotenv"
 require "fileutils"
 require "git"
+require "json"
 require "match/encryption/encryption"
+require "rexml/document"
+require "stringio"
 require "tempfile"
+require "version"
+require "xcodeproj"
+
 
 # Skip README.md creation
 Fastlane::Actions::SkipDocsAction.run(nil)
@@ -25,16 +31,37 @@ if File.exist?(".env")
   Dotenv.load(".env")
 end
 
+# Fastlane's namespacing via "platform" is great, but its internal list does not reflect my needs
+# This monkey-patch allows me to use platform designations for :flutter and :apple
+module Fastlane
+  module SupportedPlatforms
+    def self.all
+      [:flutter, :apple]
+    end
+  end
+end
 
+
+# Signing assets setup
 git_user = ENV["GIT_USER"].split(":")
 signing_assets_path = "/tmp/SigningAssets"
 keychains_path = "~/Library/Keychains"
-platforms = {
-  ios: "ipa",
-  android: "appbundle",
-  web: "web"
-}
 
+# AppStore Connect API setup
+apple_api_key = app_store_connect_api_key(
+  key_content: ENV["APP_STORE_KEY"],
+  key_id: ENV["APP_STORE_KEY_ID"],
+  issuer_id: ENV["APP_STORE_ISSUER_ID"],
+  in_house: false
+)
+
+# Play Store API setup
+google_api_key = ENV["PLAY_STORE_KEY"]
+
+# Auto generate a changelog message
+changelog = "Maintenance build generated on #{Time.now.strftime("%a. %b %-d %Y")}"
+
+# Define common provisioning lanes
 desc "Uses Match for initial signing certificate and provisioning profile generation"
 lane :initial_provisioning do
   # Remove the build keychain
@@ -43,7 +70,7 @@ lane :initial_provisioning do
       name: ENV["KEYCHAIN"]
     )
   end
-  
+
   # Create the temp keychain
   create_keychain(
     name: ENV["KEYCHAIN"],
@@ -59,7 +86,7 @@ lane :initial_provisioning do
   else
     FileUtils.mkdir_p(signing_assets_path)
   end
-    
+
   # Clone the signing assets repo
   Tempfile.create("git_ssh_key") do |file|
     file.write(ENV["GIT_SSH_KEY"])
@@ -92,26 +119,24 @@ lane :initial_provisioning do
     repo.commit("[fastlane] Updated keystore and platform android")
     repo.push
 
-    # Create signing certs and provisioning profiles with match
-    match(
-      keychain_name: ENV["KEYCHAIN"],
-      keychain_password: ENV["MATCH_PASSWORD"],  
-      git_url: signing_assets_path,
-      app_identifier: ENV["APP_IDENTIFIER"],
-      api_key: app_store_connect_api_key(
-        key_content: ENV["APP_STORE_KEY"],
-        key_id: ENV["APP_STORE_KEY_ID"],
-        issuer_id: ENV["APP_STORE_ISSUER_ID"],
-        in_house: false),
-      platform: "ios",
-      type: "appstore",
-      additional_cert_types: "mac_installer_distribution",
-      generate_apple_certs: true,
-      include_mac_in_profiles: true,
-      readonly: false,
-      force: true,
-      verbose: true
-    )
+    # Create Apple signing certs and provisioning profiles with match
+    %w[tvos ios macos catalyst].each do |platform|
+      match(
+        keychain_name: ENV["KEYCHAIN"],
+        keychain_password: ENV["MATCH_PASSWORD"],
+        git_url: signing_assets_path,
+        app_identifier: ENV["APP_IDENTIFIER"],
+        api_key: apple_api_key,
+        platform: platform,
+        type: "appstore",
+        additional_cert_types: "mac_installer_distribution",
+        generate_apple_certs: true,
+        include_mac_in_profiles: true,
+        readonly: false,
+        force: true,
+        verbose: true
+      )
+    end
   end
 end
 
@@ -123,7 +148,7 @@ lane :import_signingassets do
       name: ENV["KEYCHAIN"]
     )
   end
-    
+
   # Create the temp keychain
   create_keychain(
     name: ENV["KEYCHAIN"],
@@ -139,7 +164,7 @@ lane :import_signingassets do
   else
     FileUtils.mkdir_p(signing_assets_path)
   end
-  
+
   # Clone the signing assets repo
   Tempfile.create("git_ssh_key") do |file|
     file.write(ENV["GIT_SSH_KEY"])
@@ -159,84 +184,33 @@ lane :import_signingassets do
         file.puts "keyPassword=#{ENV["MATCH_PASSWORD"]}"
       end
     end
-    
-    # Install iOS certs and profiles from the repo
-    match(
-      keychain_name: ENV["KEYCHAIN"],
-      keychain_password: ENV["MATCH_PASSWORD"],  
-      git_url: signing_assets_path,
-      app_identifier: ENV["APP_IDENTIFIER"],
-      api_key: app_store_connect_api_key(
-        key_content: ENV["APP_STORE_KEY"],
-        key_id: ENV["APP_STORE_KEY_ID"],
-        issuer_id: ENV["APP_STORE_ISSUER_ID"],
-        in_house: false),
-      platform: "ios",
-      type: "appstore",
-      additional_cert_types: "mac_installer_distribution",
-      generate_apple_certs: true,
-      include_mac_in_profiles: true,
-      readonly: true,
-      force: false,
-      verbose: false
-    )
-  end
-end
 
-desc "Clean the flutter projects"
-lane :flutter_clean do
-  Dir.chdir("..") do
-    # Remove build artifacts from any previous runs
-    if Dir.exist?("./build")
-      FileUtils.rm_rf(Dir.glob("./build/*"))
-    end
-
-    # Remove test reports from any previous runs
-    if Dir.exist?("./coverage")
-      FileUtils.rm_rf(Dir.glob("./coverage/*"))
-    end
-
-    # Run flutter clean to clear the workspace
-    result = execute_command("flutter clean")
-  end
-end
-
-desc "Get flutter dependencies"
-lane :flutter_pub do
-  Dir.chdir("..") do
-    # Run flutter pub get to install package dependencies
-    result = execute_command("flutter pub get")
-
-    # Run flutter build_runner to output generated code
-    result = execute_command("flutter pub run build_runner build --delete-conflicting-outputs")
-  end
-end
-
-desc "Run flutter unit tests with coverage report"
-lane :flutter_test do
-  Dir.chdir("..") do
-    # Run flutter test to execute unit tests
-    result = execute_command("flutter test --coverage --reporter json")
-    File.open("./coverage/results.json", "w") do |file|
-      file.write(result)
+    # Install Apple certs and profiles from the repo
+    %w[tvos ios macos catalyst].each do |platform|
+      match(
+        keychain_name: ENV["KEYCHAIN"],
+        keychain_password: ENV["MATCH_PASSWORD"],
+        git_url: signing_assets_path,
+        app_identifier: ENV["APP_IDENTIFIER"],
+        api_key: apple_api_key,
+        platform: platform,
+        type: "appstore",
+        additional_cert_types: "mac_installer_distribution",
+        generate_apple_certs: true,
+        include_mac_in_profiles: true,
+        readonly: true,
+        force: false,
+        verbose: false
+      )
     end
   end
 end
 
-desc "Run flutter build for all target platforms"
-lane :flutter_build do
-  Dir.chdir("..") do
-    version = increment_version_patch()
-    number = version.split(".").map { |segment| segment.rjust(3, "0") }.join.to_i
-    
-    platforms.each do |platform, artifact|
-      # Run flutter build in to create release artifact
-      result = execute_command("flutter build #{artifact} --release --build-name #{version} --build-number #{number}")
-    end
-  end
-end
+# Import platform lanes
+import './lanes/apple.rb'
+import './lanes/flutter.rb'
 
-# Helper functions
+# Common helper functions
 def execute_command(cmd)
   UI.command(cmd)
   output, status = Open3.capture2(cmd, err: [:child, :out])
@@ -259,20 +233,32 @@ end
 def increment_version_patch()
   # Check the latest version string in Test Flight
   app_store_build_number(
-    api_key: app_store_connect_api_key(
-      key_content: ENV["APP_STORE_KEY"],
-      key_id: ENV["APP_STORE_KEY_ID"],
-      issuer_id: ENV["APP_STORE_ISSUER_ID"],
-      in_house: false),
+    api_key: apple_api_key,
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false,
     platform: "ios"
   )
   ios_version = lane_context[SharedValues::LATEST_VERSION]
 
+  app_store_build_number(
+    api_key: apple_api_key,
+    app_identifier: ENV["APP_IDENTIFIER"],
+    live: false,
+    platform: "appletvos"
+  )
+  tvos_version = lane_context[SharedValues::LATEST_VERSION]
+
+  app_store_build_number(
+    api_key: apple_api_key,
+    app_identifier: ENV["APP_IDENTIFIER"],
+    live: false,
+    platform: "osx"
+  )
+  macos_version = lane_context[SharedValues::LATEST_VERSION]
+
   # Check the latest version string in Google Play
   play_store_build_number(
-    api_key: ENV["PLAY_STORE_KEY"],
+    api_key: ,
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false,
     platform: "android"
@@ -289,7 +275,13 @@ def increment_version_patch()
   web_version = lane_context[SharedValues::LATEST_VERSION]
 
   # Select the highest existing version number
-  latest_version = [Gem::Version.new(ios_version), Gem::Version.new(android_version), Gem::Version.new(web_version)].max
+  latest_version = [
+    Gem::Version.new(ios_version),
+    Gem::Version.new(tvos_version),
+    Gem::Version.new(macos_version),
+    Gem::Version.new(android_version),
+    Gem::Version.new(web_version)].max
+  puts "Found version #{latest_version}"
 
   # Increment the version patch segment
   version_segments = latest_version.segments
