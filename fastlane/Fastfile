@@ -100,13 +100,14 @@ lane :initial_provisioning do
     repo.push
 
     # Create Apple signing certs and provisioning profiles with match
+    apple_app_store_key = get_apple_app_store_key()
     %w[tvos ios macos catalyst].each do |platform|
       match(
         keychain_name: ENV["KEYCHAIN"],
         keychain_password: ENV["MATCH_PASSWORD"],
         git_url: signing_assets_path,
         app_identifier: ENV["APP_IDENTIFIER"],
-        api_key: get_apple_app_store_key,
+        api_key: apple_app_store_key,
         platform: platform,
         type: "appstore",
         additional_cert_types: "mac_installer_distribution",
@@ -168,13 +169,14 @@ lane :import_signingassets do
     end
 
     # Install Apple certs and profiles from the repo
+    apple_app_store_key = get_apple_app_store_key()
     %w[tvos ios macos catalyst].each do |platform|
       match(
         keychain_name: ENV["KEYCHAIN"],
         keychain_password: ENV["MATCH_PASSWORD"],
         git_url: signing_assets_path,
         app_identifier: ENV["APP_IDENTIFIER"],
-        api_key: get_apple_app_store_key,
+        api_key: apple_app_store_key,
         platform: platform,
         type: "appstore",
         additional_cert_types: "mac_installer_distribution",
@@ -219,18 +221,19 @@ def get_apple_app_store_key()
     key_id: ENV["APP_STORE_KEY_ID"],
     issuer_id: ENV["APP_STORE_ISSUER_ID"],
     in_house: false
-  )
+  ) || ""
 end
 
 def get_google_play_store_key()
   # Google Play Store API setup
-  ENV["PLAY_STORE_KEY"]
+  ENV["PLAY_STORE_KEY"] || ""
 end
 
 def increment_version_patch()
   # Check the latest version string in Test Flight
+  apple_app_store_key = get_apple_app_store_key()
   app_store_build_number(
-    api_key: get_apple_app_store_key,
+    api_key: apple_app_store_key,
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false,
     platform: "ios"
@@ -238,7 +241,7 @@ def increment_version_patch()
   ios_version = lane_context[SharedValues::LATEST_VERSION]
 
   app_store_build_number(
-    api_key: get_apple_app_store_key,
+    api_key: apple_app_store_key,
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false,
     platform: "appletvos"
@@ -246,7 +249,7 @@ def increment_version_patch()
   tvos_version = lane_context[SharedValues::LATEST_VERSION]
 
   app_store_build_number(
-    api_key: get_apple_app_store_key,
+    api_key: apple_app_store_key,
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false,
     platform: "osx"
@@ -254,8 +257,9 @@ def increment_version_patch()
   macos_version = lane_context[SharedValues::LATEST_VERSION]
 
   # Check the latest version string in Google Play
+  google_play_store_key = get_google_play_store_key()
   play_store_build_number(
-    api_key: get_google_play_store_key,
+    api_key: google_play_store_key,
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false,
     platform: "android"
