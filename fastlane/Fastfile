@@ -232,7 +232,7 @@ end
 
 def increment_version_patch()
   # Check the latest version string in Test Flight
-  apple_app_store_latest_version(
+  other_action.apple_app_store_latest_version(
     api_key: get_apple_app_store_key(),
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false
@@ -240,7 +240,7 @@ def increment_version_patch()
   apple_version = lane_context[SharedValues::LATEST_VERSION]
 
   # Check the latest version string in Google Play
-  google_play_store_latest_version(
+  other_action.google_play_store_latest_version(
     api_key: get_google_play_store_key(),
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false
@@ -248,7 +248,7 @@ def increment_version_patch()
   google_version = lane_context[SharedValues::LATEST_VERSION]
 
   # Check the latest version string on the web
-  web_latest_version(
+  other_action.web_latest_version(
     api_key: "",
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false
