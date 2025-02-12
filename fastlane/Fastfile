@@ -231,7 +231,7 @@ end
 
 def increment_version_patch()
   # Check the latest version string in Test Flight
-  apple_app_store_last_version(
+  apple_app_store_latest_version(
     api_key: get_apple_app_store_key(),
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false
