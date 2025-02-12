@@ -231,57 +231,33 @@ end
 
 def increment_version_patch()
   # Check the latest version string in Test Flight
-  apple_app_store_key = get_apple_app_store_key()
-  puts apple_app_store_key
-  app_store_build_number(
-    api_key: apple_app_store_key,
+  apple_app_store_last_version(
+    api_key: get_apple_app_store_key(),
     app_identifier: ENV["APP_IDENTIFIER"],
-    live: false,
-    platform: "ios"
+    live: false
   )
-  ios_version = lane_context[SharedValues::LATEST_VERSION]
-
-  app_store_build_number(
-    api_key: apple_app_store_key,
-    app_identifier: ENV["APP_IDENTIFIER"],
-    live: false,
-    platform: "appletvos"
-  )
-  tvos_version = lane_context[SharedValues::LATEST_VERSION]
-
-  app_store_build_number(
-    api_key: apple_app_store_key,
-    app_identifier: ENV["APP_IDENTIFIER"],
-    live: false,
-    platform: "osx"
-  )
-  macos_version = lane_context[SharedValues::LATEST_VERSION]
+  apple_version = lane_context[SharedValues::LATEST_VERSION]
 
   # Check the latest version string in Google Play
-  google_play_store_key = get_google_play_store_key()
-  play_store_build_number(
-    api_key: google_play_store_key,
+  google_play_store_latest_version(
+    api_key: get_google_play_store_key(),
     app_identifier: ENV["APP_IDENTIFIER"],
-    live: false,
-    platform: "android"
+    live: false
   )
-  android_version = lane_context[SharedValues::LATEST_VERSION]
+  google_version = lane_context[SharedValues::LATEST_VERSION]
 
   # Check the latest version string on the web
-  web_build_number(
+  web_latest_version(
     api_key: "",
     app_identifier: ENV["APP_IDENTIFIER"],
-    live: false,
-    platform: "web"
+    live: false
   )
   web_version = lane_context[SharedValues::LATEST_VERSION]
 
   # Select the highest existing version number
   latest_version = [
-    Gem::Version.new(ios_version),
-    Gem::Version.new(tvos_version),
-    Gem::Version.new(macos_version),
-    Gem::Version.new(android_version),
+    Gem::Version.new(apple_version),
+    Gem::Version.new(google_version),
     Gem::Version.new(web_version)].max
   puts "Found version #{latest_version}"
 

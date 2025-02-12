@@ -8,12 +8,12 @@ module Fastlane
       LATEST_VERSION = :LATEST_VERSION
     end
 
-    class WebBuildNumberAction < Action
+    class WebLatestVersionAction < Action
       def self.run(params)
         # Extract parameters
         domain = params[:app_identifier].split(".").reverse.join(".")
         version_url = "https://#{domain}/version.json"
-        
+
         Actions.lane_context[SharedValues::LATEST_VERSION] = "0.0.0"
 
         UI.message("Fetching version from #{version_url}")
@@ -28,7 +28,6 @@ module Fastlane
 
           # Extract the version string
           latest_version = Gem::Version.new(version_data["version"])
-
           unless latest_version
             UI.important("No version found in the version.json file at #{version_url}")
             return
@@ -61,12 +60,6 @@ module Fastlane
             description: "Whether to fetch from the production track or a pre-production track",
             type: Boolean,
             default_value: true
-          ),
-          FastlaneCore::ConfigItem.new(
-            key: :platform,
-            description: "Platform (kept for compatibility, not used in this action)",
-            type: String,
-            default_value: "web"
           )
         ]
       end
@@ -82,7 +75,7 @@ module Fastlane
       end
 
       def self.authors
-        ["Dave"]
+        ["DigitalDementia"]
       end
 
       def self.is_supported?(platform)
