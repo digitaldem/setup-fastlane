@@ -32,16 +32,16 @@ if File.exist?(".env")
 end
 
 # Fastlane's namespacing via "platform" is great, but its internal list does not reflect my needs
-Fastlane::SupportedPlatforms.extra = ["apple", "flutter"]
+Fastlane::SupportedPlatforms.extra = [:apple, :flutter]
 
 # This monkey-patch allows me to use platform designations for :flutter and :apple
-module Fastlane
-  module SupportedPlatforms
-    def self.all
-      [:flutter, :apple]
-    end
-  end
-end
+#module Fastlane
+#  module SupportedPlatforms
+#    def self.all
+#      [:flutter, :apple]
+#    end
+#  end
+#end
 
 
 # Signing assets setup
