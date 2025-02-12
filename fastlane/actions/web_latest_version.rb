@@ -28,8 +28,8 @@ module Fastlane
 
           # Extract the version string
           versions.add(Gem::Version.new(version_data["version"]))
-        rescue StandardError => e
-          UI.error("Error fetching or parsing version.json: #{e.message}")
+        rescue Exception => e
+          UI.important("Error fetching or parsing version.json: #{e.message}")
         end
         
         # Select the highest version found
