@@ -22,9 +22,9 @@ require "tempfile"
 require "version"
 require "xcodeproj"
 
-require_relative "./actions/apple_app_store_latest_version"
-require_relative "./actions/google_play_store_latest_version"
-require_relative "./actions/web_latest_version"
+#require_relative "./actions/apple_app_store_latest_version"
+#require_relative "./actions/google_play_store_latest_version"
+#require_relative "./actions/web_latest_version"
 
 # Skip README.md creation
 Fastlane::Actions::SkipDocsAction.run(nil)
@@ -246,7 +246,7 @@ def increment_version_patch()
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false
   )
-  apple_version = lane_context[AppleAppStoreSharedValues::LATEST_VERSION]
+  apple_version = lane_context[Fastlane::Actions::SharedValues::APPLE_APP_STORE_LATEST_VERSION]
 
   # Check the latest version string in Google Play
   google_play_store_latest_version(
@@ -254,7 +254,7 @@ def increment_version_patch()
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false
   )
-  google_version = lane_context[GooglePlayStoreSharedValues::LATEST_VERSION]
+  google_version = lane_context[Fastlane::Actions::SharedValues::GOOGLE_PLAY_STORE_LATEST_VERSION]
 
   # Check the latest version string on the web
   web_latest_version(
@@ -262,7 +262,7 @@ def increment_version_patch()
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false
   )
-  web_version = lane_context[WebSharedValues::LATEST_VERSION]
+  web_version = lane_context[Fastlane::Actions::SharedValues::WEB_LATEST_VERSION]
 
   # Select the highest existing version number
   latest_version = [
