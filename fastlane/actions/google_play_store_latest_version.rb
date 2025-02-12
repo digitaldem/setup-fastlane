@@ -17,6 +17,7 @@ module Fastlane
         versions = Set.new
 
         Actions.lane_context[SharedValues::LATEST_VERSION] = "0.0.0"
+        UI.message("Fetching version list for #{app_identifier} on Google Play Store")
 
         begin
           # Initialize the Google Play API client
@@ -26,8 +27,6 @@ module Fastlane
             json_key_io: StringIO.new(api_key.to_json()),
             scope: ["https://www.googleapis.com/auth/androidpublisher"]
           )
-
-          UI.message("Fetching version list for #{app_identifier} on Google Play Store")
 
           # Create an edit for the app
           edit = service.insert_edit(app_identifier)
