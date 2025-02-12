@@ -15,7 +15,6 @@ module Fastlane
         version_url = "https://#{domain}/version.json"
 
         Actions.lane_context[SharedValues::LATEST_VERSION] = "0.0.0"
-
         UI.message("Fetching version from #{version_url}")
 
         begin
