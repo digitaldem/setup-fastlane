@@ -83,25 +83,12 @@ platform :flutter do
     upload_failures = []
 
     Dir.chdir("..") do
-      dir_path = "./"
-      Dir.entries(dir_path).each { |file| puts file }
-
-      dir_path = "./build"
-      Dir.entries(dir_path).each { |file| puts file }
-
       dir_path = "./build/ios"
+      puts dir_path
       Dir.entries(dir_path).each { |file| puts file }
 
-      dir_path = "./build/app"
-      Dir.entries(dir_path).each { |file| puts file }
-
-      dir_path = "./build/app/outputs"
-      Dir.entries(dir_path).each { |file| puts file }
-
-      dir_path = "./build/app/outputs/bundle"
-      Dir.entries(dir_path).each { |file| puts file }
-
-      dir_path = "./build/app/outputs/bundle/release"
+      dir_path = "./build/ios/archive"
+      puts dir_path
       Dir.entries(dir_path).each { |file| puts file }
 
       begin
@@ -143,7 +130,7 @@ platform :flutter do
     # Upload iOS ipa
     upload_to_testflight(
       api_key: get_apple_app_store_key(),
-      ipa: "./build/ios/#{ENV["SCHEME"]}.ipa",
+      ipa: "./build/ios/archive/#{ENV["SCHEME"]}.ipa",
       app_platform: "ios",
       changelog: $changelog,
       notify_external_testers: false
