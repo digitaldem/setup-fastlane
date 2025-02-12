@@ -5,7 +5,7 @@ module Fastlane
       LATEST_VERSION = :LATEST_VERSION
     end
 
-    class AppStoreLatestVersionAction < Action
+    class AppleAppStoreLatestVersionAction < Action
       def self.run(params)
         # Extract parameters
         api_key = params[:api_key]
