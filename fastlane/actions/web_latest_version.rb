@@ -4,8 +4,8 @@ require "uri"
 
 module Fastlane
   module Actions
-    module WebSharedValues
-      LATEST_VERSION = :LATEST_VERSION
+    module SharedValues
+      WEB_LATEST_VERSION = :WEB_LATEST_VERSION
     end
 
     class WebLatestVersionAction < Action
@@ -15,7 +15,6 @@ module Fastlane
         version_url = "https://#{domain}/version.json"
         versions = Set.new
 
-        Actions.lane_context[SharedValues::LATEST_VERSION] = "0.0.0"
         UI.message("Fetching version from #{version_url}")
 
         begin
@@ -40,7 +39,7 @@ module Fastlane
         end
         
         # Set the lane's shared value result
-        Actions.lane_context[WebSharedValues::LATEST_VERSION] = latest_version.to_s
+        Actions.lane_context[SharedValues::WEB_LATEST_VERSION] = latest_version.to_s
       end
 
       def self.description
@@ -70,7 +69,7 @@ module Fastlane
 
       def self.output
         [
-          ["LATEST_VERSION", "The latest version fetched from the version.json file"]
+          ["WEB_LATEST_VERSION", "The latest version fetched from the version.json file"]
         ]
       end
 
