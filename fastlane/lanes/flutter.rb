@@ -83,7 +83,27 @@ platform :flutter do
     upload_failures = []
 
     Dir.chdir("..") do
-      puts Dir.pwd
+      dir_path = "./"
+      Dir.entries(dir_path).each { |file| puts file }
+
+      dir_path = "./build"
+      Dir.entries(dir_path).each { |file| puts file }
+
+      dir_path = "./build/ios"
+      Dir.entries(dir_path).each { |file| puts file }
+
+      dir_path = "./build/app"
+      Dir.entries(dir_path).each { |file| puts file }
+
+      dir_path = "./build/app/outputs"
+      Dir.entries(dir_path).each { |file| puts file }
+
+      dir_path = "./build/app/outputs/bundle"
+      Dir.entries(dir_path).each { |file| puts file }
+
+      dir_path = "./build/app/outputs/bundle/release"
+      Dir.entries(dir_path).each { |file| puts file }
+
       begin
         _upload_ios
       rescue => e
