@@ -74,8 +74,8 @@ lane :initial_provisioning do
     file.flush
     ENV["GIT_SSH_COMMAND"] = "ssh -i #{file.path} -o IdentitiesOnly=yes"
     repo = Git.clone(ENV["KEYS_GIT_URL"], signing_assets_path)
-    repo.config('user.name', git_user[0], global: false)
-    repo.config('user.email', git_user[1], global: false)
+    repo.config("user.name", git_user[0], global: false)
+    repo.config("user.email", git_user[1], global: false)
 
     # Create Google Play Store key in the keystore file
     google_keystore = "keystores/google.jks"
@@ -191,8 +191,8 @@ lane :import_signingassets do
 end
 
 # Import platform lanes
-import './lanes/apple.rb'
-import './lanes/flutter.rb'
+import "./lanes/apple.rb"
+import "./lanes/flutter.rb"
 
 # Common helper functions
 def execute_command(cmd)

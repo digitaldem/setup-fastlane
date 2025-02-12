@@ -1,6 +1,6 @@
-require 'google/apis/androidpublisher_v3'
-require 'set'
-require 'stringio'
+require "google/apis/androidpublisher_v3"
+require "set"
+require "stringio"
 
 module Fastlane
   module Actions
@@ -34,7 +34,7 @@ module Fastlane
           # Track selection: live = true => production, live = false => internal
           track = live ? "production" : "internal"
 
-          # Fetch track and extract the track's version codes as a 9 digit string
+          # Fetch track and extract the track"s version codes as a 9 digit string
           track_info = service.get_edit_track(app_identifier, edit.id, track)
           codes = track_info.releases.flat_map(&:version_codes).map { |code| code.to_s.rjust(9, "0") }
 
@@ -85,7 +85,7 @@ module Fastlane
 
       def self.output
         [
-          ['LATEST_VERSION', 'The latest version found set by this action']
+          ["LATEST_VERSION", "The latest version found set by this action"]
         ]
       end
 

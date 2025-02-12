@@ -68,7 +68,7 @@ module Fastlane
 
       def self.output
         [
-          ['LATEST_VERSION', 'The latest version found set by this action']
+          ["LATEST_VERSION", "The latest version found set by this action"]
         ]
       end
 

@@ -1,6 +1,6 @@
-require 'net/http'
-require 'json'
-require 'uri'
+require "net/http"
+require "json"
+require "uri"
 
 module Fastlane
   module Actions
@@ -66,7 +66,7 @@ module Fastlane
 
       def self.output
         [
-          ['LATEST_VERSION', 'The latest version fetched from the version.json file']
+          ["LATEST_VERSION", "The latest version fetched from the version.json file"]
         ]
       end
 
