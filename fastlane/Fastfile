@@ -226,7 +226,8 @@ end
 
 def get_google_play_store_key()
   # Google Play Store API setup
-  ENV["PLAY_STORE_KEY"] || "{}"
+  key = ENV["PLAY_STORE_KEY"] || "{}"
+  JSON.parse(key)
 end
 
 def increment_version_patch()

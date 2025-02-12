@@ -51,7 +51,7 @@ module Fastlane
           FastlaneCore::ConfigItem.new(
             key: :api_key,
             description: "Apple App Store Connect api key",
-            type: String,
+            type: Hash,
           ),
           FastlaneCore::ConfigItem.new(
             key: :app_identifier,

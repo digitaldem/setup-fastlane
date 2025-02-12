@@ -22,7 +22,7 @@ module Fastlane
           service = Google::Apis::AndroidpublisherV3::AndroidPublisherService.new
           #service.client_options.log_http_requests = true
           service.authorization = Google::Auth::ServiceAccountCredentials.make_creds(
-            json_key_io: StringIO.new(api_key),
+            json_key_io: StringIO.new(api_key.to_json()),
             scope: ["https://www.googleapis.com/auth/androidpublisher"]
           )
 
@@ -67,7 +67,7 @@ module Fastlane
           FastlaneCore::ConfigItem.new(
             key: :api_key,
             description: "Google Play Store service account JSON key file",
-            type: String,
+            type: Hash,
           ),
           FastlaneCore::ConfigItem.new(
             key: :app_identifier,
