@@ -13,7 +13,7 @@ runs:
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
-        ruby-version: ${{ inputs.ruby_version }}
+        ruby-version: ${{ inputs.ruby-version }}
         bundler-cache: true
 
     - name: Install Fastlane and other dependencies
