@@ -34,18 +34,21 @@ if File.exist?(".env")
 end
 
 # Auto generate a changelog message
-changelog = "Maintenance build generated on #{Time.now.strftime("%a. %b %-d %Y")}"
+$changelog = "Maintenance build generated on #{Time.now.strftime("%a. %b %-d %Y")}"
+
+# Set keychain location
+$keychains_path = "~/Library/Keychains"
 
 # Signing assets setup
 git_user = ENV["GIT_USER"].split(":")
 signing_assets_path = "/tmp/SigningAssets"
-keychains_path = "~/Library/Keychains"
+
 
 # Define common provisioning lanes
 desc "Uses Match for initial signing certificate and provisioning profile generation"
 lane :initial_provisioning do
   # Remove the build keychain
-  if File.exist?("#{keychains_path}/#{ENV["KEYCHAIN"]}-db")
+  if File.exist?("#{$keychains_path}/#{ENV["KEYCHAIN"]}-db")
     delete_keychain(
       name: ENV["KEYCHAIN"]
     )
@@ -124,7 +127,7 @@ end
 desc "Import keystores, certificates and provisioning profiles"
 lane :import_signingassets do
   # Remove the build keychain
-  if File.exist?("#{keychains_path}/#{ENV["KEYCHAIN"]}-db")
+  if File.exist?("#{$keychains_path}/#{ENV["KEYCHAIN"]}-db")
     delete_keychain(
       name: ENV["KEYCHAIN"]
     )
