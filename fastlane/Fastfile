@@ -176,21 +176,25 @@ lane :import_signingassets do
     # Install Apple certs and profiles from the repo
     apple_app_store_key = get_apple_app_store_key()
     %w[tvos ios macos catalyst].each do |platform|
-      match(
-        keychain_name: ENV["KEYCHAIN"],
-        keychain_password: ENV["MATCH_PASSWORD"],
-        git_url: $signing_assets_path,
-        app_identifier: ENV["APP_IDENTIFIER"],
-        api_key: apple_app_store_key,
-        platform: platform,
-        type: "appstore",
-        additional_cert_types: "mac_installer_distribution",
-        generate_apple_certs: true,
-        include_mac_in_profiles: true,
-        readonly: true,
-        force: false,
-        verbose: false
-      )
+      begin
+        match(
+          keychain_name: ENV["KEYCHAIN"],
+          keychain_password: ENV["MATCH_PASSWORD"],
+          git_url: $signing_assets_path,
+          app_identifier: ENV["APP_IDENTIFIER"],
+          api_key: apple_app_store_key,
+          platform: platform,
+          type: "appstore",
+          additional_cert_types: "mac_installer_distribution",
+          generate_apple_certs: true,
+          include_mac_in_profiles: true,
+          readonly: true,
+          force: false,
+          verbose: false
+        )
+      rescue Exception => e
+        UI.important("Error fetching #{platform} info: #{e.message}")
+      end
     end
   end
 end
