@@ -18,7 +18,7 @@ module Fastlane
 
           # Fetch latest version for each platform
           %w[appletvos ios osx].each do |platform|
-            app_store_build_number(
+            other_action.app_store_build_number(
               api_key: api_key,
               app_identifier: ENV["APP_IDENTIFIER"],
               live: false,
