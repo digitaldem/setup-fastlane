@@ -2,7 +2,7 @@ name: Setup Fastlane Environment
 description: Sets up Ruby, installs Bundler, and provides a Fastfile.
 author: DigitalDementia
 inputs:
-  ruby_version:
+  ruby-version:
     description: 'Ruby version to use'
     required: false
     default: '3.3'
