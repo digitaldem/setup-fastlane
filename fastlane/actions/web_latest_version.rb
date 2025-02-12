@@ -36,9 +36,10 @@ module Fastlane
         latest_version = versions.max
         unless latest_version
           UI.important("No version found in the version.json file at #{version_url}")
-          return
+          latest_version = Gem::Version.new("0.0.0")
         end
-
+        
+        # Set the lane's shared value result
         Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
       end
 
