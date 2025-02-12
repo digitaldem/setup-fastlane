@@ -12,12 +12,12 @@ module Fastlane
         live = params[:live]
 
         Actions.lane_context[SharedValues::LATEST_VERSION] = "0.0.0"
+        
+        versions = Set.new
 
-        begin
-          versions = Set.new
-
-          # Fetch latest version for each platform
-          %w[appletvos ios osx].each do |platform|
+        # Fetch latest version for each platform
+        %w[appletvos ios osx].each do |platform|
+          begin
             other_action.app_store_build_number(
               api_key: api_key,
               app_identifier: ENV["APP_IDENTIFIER"],
@@ -26,19 +26,19 @@ module Fastlane
             )
             version = lane_context[SharedValues::LATEST_VERSION]
             versions.add(Gem::Version.new(version))
+          rescue Exception => e
+            UI.important("Error fetching #{platform} info: #{e.message}")
           end
-
-          # Select the highest version found
-          latest_version = versions.max
-          unless latest_version
-            UI.important("No versions found in for #{app_identifier}")
-            return
-          end
-
-          Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
-        rescue Google::Apis::ClientError => e
-          UI.important("Error fetching track info: #{e.message}")
         end
+
+        # Select the highest version found
+        latest_version = versions.max
+        unless latest_version
+          UI.important("No versions found in for #{app_identifier}")
+          return
+        end
+
+        Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
       end
 
       def self.description
