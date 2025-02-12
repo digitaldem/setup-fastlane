@@ -36,6 +36,8 @@ module Fastlane
           UI.important("No versions found in for #{app_identifier}")
           latest_version = Gem::Version.new("0.0.0")
         end
+        
+        # Set the lane's shared value result
         Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
       end
 
