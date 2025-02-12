@@ -22,36 +22,24 @@ require "tempfile"
 require "version"
 require "xcodeproj"
 
-
 # Skip README.md creation
 Fastlane::Actions::SkipDocsAction.run(nil)
+
+# Fastlane's namespacing via "platform" is great, but its default list does not meet my needs
+Fastlane::SupportedPlatforms.extra = [:apple, :flutter]
 
 # Load .env (local)
 if File.exist?(".env")
   Dotenv.load(".env")
 end
 
-# Fastlane's namespacing via "platform" is great, but its internal list does not reflect my needs
-Fastlane::SupportedPlatforms.extra = [:apple, :flutter]
+# Auto generate a changelog message
+changelog = "Maintenance build generated on #{Time.now.strftime("%a. %b %-d %Y")}"
 
 # Signing assets setup
 git_user = ENV["GIT_USER"].split(":")
 signing_assets_path = "/tmp/SigningAssets"
 keychains_path = "~/Library/Keychains"
-
-# AppStore Connect API setup
-apple_api_key = app_store_connect_api_key(
-  key_content: ENV["APP_STORE_KEY"],
-  key_id: ENV["APP_STORE_KEY_ID"],
-  issuer_id: ENV["APP_STORE_ISSUER_ID"],
-  in_house: false
-)
-
-# Play Store API setup
-google_api_key = ENV["PLAY_STORE_KEY"]
-
-# Auto generate a changelog message
-changelog = "Maintenance build generated on #{Time.now.strftime("%a. %b %-d %Y")}"
 
 # Define common provisioning lanes
 desc "Uses Match for initial signing certificate and provisioning profile generation"
@@ -118,7 +106,7 @@ lane :initial_provisioning do
         keychain_password: ENV["MATCH_PASSWORD"],
         git_url: signing_assets_path,
         app_identifier: ENV["APP_IDENTIFIER"],
-        api_key: apple_api_key,
+        api_key: get_apple_app_store_key,
         platform: platform,
         type: "appstore",
         additional_cert_types: "mac_installer_distribution",
@@ -186,7 +174,7 @@ lane :import_signingassets do
         keychain_password: ENV["MATCH_PASSWORD"],
         git_url: signing_assets_path,
         app_identifier: ENV["APP_IDENTIFIER"],
-        api_key: apple_api_key,
+        api_key: get_apple_app_store_key,
         platform: platform,
         type: "appstore",
         additional_cert_types: "mac_installer_distribution",
@@ -224,10 +212,25 @@ def decrypt(file)
   cryptor.decrypt(file_path: file, password: ENV["MATCH_PASSWORD"])
 end
 
+def get_apple_app_store_key()
+  # Apple App Store Connect API setup
+  app_store_connect_api_key(
+    key_content: ENV["APP_STORE_KEY"],
+    key_id: ENV["APP_STORE_KEY_ID"],
+    issuer_id: ENV["APP_STORE_ISSUER_ID"],
+    in_house: false
+  )
+end
+
+def get_google_play_store_key()
+  # Google Play Store API setup
+  ENV["PLAY_STORE_KEY"]
+end
+
 def increment_version_patch()
   # Check the latest version string in Test Flight
   app_store_build_number(
-    api_key: apple_api_key,
+    api_key: get_apple_app_store_key,
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false,
     platform: "ios"
@@ -235,7 +238,7 @@ def increment_version_patch()
   ios_version = lane_context[SharedValues::LATEST_VERSION]
 
   app_store_build_number(
-    api_key: apple_api_key,
+    api_key: get_apple_app_store_key,
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false,
     platform: "appletvos"
@@ -243,7 +246,7 @@ def increment_version_patch()
   tvos_version = lane_context[SharedValues::LATEST_VERSION]
 
   app_store_build_number(
-    api_key: apple_api_key,
+    api_key: get_apple_app_store_key,
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false,
     platform: "osx"
@@ -252,7 +255,7 @@ def increment_version_patch()
 
   # Check the latest version string in Google Play
   play_store_build_number(
-    api_key: ,
+    api_key: get_google_play_store_key,
     app_identifier: ENV["APP_IDENTIFIER"],
     live: false,
     platform: "android"

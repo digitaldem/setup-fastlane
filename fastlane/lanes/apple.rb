@@ -149,7 +149,7 @@ platform :apple do
   lane :_upload_tvos do
     # Upload tvOS ipa
     upload_to_testflight(
-      api_key: api_key,
+      api_key: get_apple_app_store_key,
       ipa: "./builds/tvOS/#{ENV["SCHEME"]}.ipa",
       app_platform: "appletvos",
       changelog: changelog,
@@ -186,7 +186,7 @@ platform :apple do
   lane :_upload_ios do
     # Upload iOS ipa
     upload_to_testflight(
-      api_key: api_key,
+      api_key: get_apple_app_store_key,
       ipa: "./builds/iOS/#{ENV["SCHEME"]}.ipa",
       app_platform: "ios",
       changelog: changelog,
@@ -223,7 +223,7 @@ platform :apple do
   lane :_upload_macos do
     # Upload macOS pkg
     upload_to_testflight(
-      api_key: api_key,
+      api_key: get_apple_app_store_key,
       pkg: "./builds/macOS/#{ENV["SCHEME"]}.pkg",
       app_platform: "osx",
       changelog: changelog,

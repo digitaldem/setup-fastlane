@@ -120,7 +120,7 @@ platform :flutter do
   lane :_upload_ios do
     # Upload iOS ipa
     upload_to_testflight(
-      api_key: apple_api_key,
+      api_key: get_apple_app_store_key,
       ipa: "./build/ios/#{ENV["SCHEME"]}.ipa",
       app_platform: "ios",
       changelog: changelog,
@@ -138,7 +138,7 @@ platform :flutter do
   lane :_upload_android do
     # Upload Android aab
     Tempfile.open(["temp", ".json"]) do |tempfile|
-      tempfile.write(google_api_key)
+      tempfile.write(get_google_play_store_key)
       tempfile.flush
       supply(
         json_key: tempfile.path,
