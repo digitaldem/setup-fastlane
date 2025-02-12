@@ -22,6 +22,10 @@ require "tempfile"
 require "version"
 require "xcodeproj"
 
+require_relative "./actions/apple_app_store_latest_version"
+require_relative "./actions/google_play_store_latest_version"
+require_relative "./actions/web_latest_version"
+
 # Skip README.md creation
 Fastlane::Actions::SkipDocsAction.run(nil)
 
