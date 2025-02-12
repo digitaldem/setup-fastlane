@@ -53,7 +53,7 @@ module Fastlane
           end
 
           Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
-        rescue Google::Apis::ClientError => e
+        rescue Exception => e
           UI.important("Error fetching track info: #{e.message}")
         end
       end
