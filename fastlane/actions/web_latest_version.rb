@@ -13,6 +13,7 @@ module Fastlane
         # Extract parameters
         domain = params[:app_identifier].split(".").reverse.join(".")
         version_url = "https://#{domain}/version.json"
+        versions = Set.new
 
         Actions.lane_context[SharedValues::LATEST_VERSION] = "0.0.0"
         UI.message("Fetching version from #{version_url}")
@@ -26,16 +27,19 @@ module Fastlane
           version_data = JSON.parse(response)
 
           # Extract the version string
-          latest_version = Gem::Version.new(version_data["version"])
-          unless latest_version
-            UI.important("No version found in the version.json file at #{version_url}")
-            return
-          end
-
-          Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
+          versions.add(Gem::Version.new(version_data["version"]))
+          
         rescue StandardError => e
           UI.error("Error fetching or parsing version.json: #{e.message}")
         end
+        
+        latest_version = versions.max
+        unless latest_version
+          UI.important("No version found in the version.json file at #{version_url}")
+          return
+        end
+
+        Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
       end
 
       def self.description
