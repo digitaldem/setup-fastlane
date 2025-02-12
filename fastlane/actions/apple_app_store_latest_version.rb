@@ -10,10 +10,9 @@ module Fastlane
         api_key = params[:api_key]
         app_identifier = params[:app_identifier]
         live = params[:live]
+        versions = Set.new
 
         Actions.lane_context[SharedValues::LATEST_VERSION] = "0.0.0"
-        
-        versions = Set.new
 
         # Fetch latest version for each platform
         %w[appletvos ios osx].each do |platform|
