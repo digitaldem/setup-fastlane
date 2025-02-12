@@ -123,7 +123,7 @@ platform :flutter do
       api_key: get_apple_app_store_key(),
       ipa: "./build/ios/#{ENV["SCHEME"]}.ipa",
       app_platform: "ios",
-      changelog: changelog,
+      changelog: $changelog,
       notify_external_testers: false
     )
   end
