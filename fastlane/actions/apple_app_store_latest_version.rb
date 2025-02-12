@@ -1,7 +1,7 @@
 module Fastlane
   module Actions
-    module AppleAppStoreSharedValues
-      LATEST_VERSION = :LATEST_VERSION
+    module SharedValues
+      APPLE_APP_STORE_LATEST_VERSION = :APPLE_APP_STORE_LATEST_VERSION
     end
 
     class AppleAppStoreLatestVersionAction < Action
@@ -38,7 +38,7 @@ module Fastlane
         end
         
         # Set the lane's shared value result
-        Actions.lane_context[AppleAppStoreSharedValues::LATEST_VERSION] = latest_version.to_s
+        Actions.lane_context[SharedValues::APPLE_APP_STORE_LATEST_VERSION] = latest_version.to_s
       end
 
       def self.description
@@ -68,7 +68,7 @@ module Fastlane
 
       def self.output
         [
-          ["LATEST_VERSION", "The latest version found set by this action"]
+          ["APPLE_APP_STORE_LATEST_VERSION", "The latest version found set by this action"]
         ]
       end
 
