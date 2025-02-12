@@ -64,7 +64,7 @@ lane :initial_provisioning do
 
   # Clear or create the signing assets destination
   if Dir.exist?($signing_assets_path)
-    FileUtils.rm_rf(Dir.glob("#{$signing_assets_path}/*"))
+    FileUtils.rm_rf(Dir.glob("#{$signing_assets_path}/*", File::FNM_DOTMATCH))
   else
     FileUtils.mkdir_p($signing_assets_path)
   end
@@ -145,7 +145,7 @@ lane :import_signingassets do
 
   # Clean the signing assets repo
   if Dir.exist?($signing_assets_path)
-    FileUtils.rm_rf(Dir.glob("#{$signing_assets_path}/*"))
+    FileUtils.rm_rf(Dir.glob("#{$signing_assets_path}/*", File::FNM_DOTMATCH))
   else
     FileUtils.mkdir_p($signing_assets_path)
   end
