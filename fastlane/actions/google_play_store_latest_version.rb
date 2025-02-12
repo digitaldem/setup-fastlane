@@ -4,8 +4,8 @@ require "stringio"
 
 module Fastlane
   module Actions
-    module GooglePlayStoreSharedValues
-      LATEST_VERSION = :LATEST_VERSION
+    module SharedValues
+      GOOGLE_PLAY_STORE_LATEST_VERSION = :GOOGLE_PLAY_STORE_LATEST_VERSION
     end
 
     class GooglePlayStoreLatestVersionAction < Action
@@ -16,7 +16,6 @@ module Fastlane
         live = params[:live]
         versions = Set.new
 
-        Actions.lane_context[SharedValues::LATEST_VERSION] = "0.0.0"
         UI.message("Fetching version list for #{app_identifier} on Google Play Store")
 
         begin
@@ -55,7 +54,7 @@ module Fastlane
         end
         
         # Set the lane's shared value result
-        Actions.lane_context[GooglePlayStoreSharedValues::LATEST_VERSION] = latest_version.to_s
+        Actions.lane_context[SharedValues::GOOGLE_PLAY_STORE_LATEST_VERSION] = latest_version.to_s
       end
 
       def self.description
@@ -85,7 +84,7 @@ module Fastlane
 
       def self.output
         [
-          ["LATEST_VERSION", "The latest version found set by this action"]
+          ["GOOGLE_PLAY_STORE_LATEST_VERSION", "The latest version found set by this action"]
         ]
       end
 
