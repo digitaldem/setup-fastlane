@@ -40,8 +40,7 @@ $changelog = "Maintenance build generated on #{Time.now.strftime("%a. %b %-d %Y"
 $keychains_path = "~/Library/Keychains"
 
 # Signing assets setup
-git_user = ENV["GIT_USER"].split(":")
-signing_assets_path = "/tmp/SigningAssets"
+$signing_assets_path = "/tmp/SigningAssets"
 
 
 # Define common provisioning lanes
@@ -64,10 +63,10 @@ lane :initial_provisioning do
   )
 
   # Clear or create the signing assets destination
-  if Dir.exist?(signing_assets_path)
-    FileUtils.rm_rf(Dir.glob("#{signing_assets_path}/*"))
+  if Dir.exist?($signing_assets_path)
+    FileUtils.rm_rf(Dir.glob("#{$signing_assets_path}/*"))
   else
-    FileUtils.mkdir_p(signing_assets_path)
+    FileUtils.mkdir_p($signing_assets_path)
   end
 
   # Clone the signing assets repo
@@ -75,20 +74,22 @@ lane :initial_provisioning do
     file.write(ENV["GIT_SSH_KEY"])
     file.chmod(0600)
     file.flush
+    
     ENV["GIT_SSH_COMMAND"] = "ssh -i #{file.path} -o IdentitiesOnly=yes"
-    repo = Git.clone(ENV["KEYS_GIT_URL"], signing_assets_path)
+    git_user = ENV["GIT_USER"].split(":")
+    repo = Git.clone(ENV["KEYS_GIT_URL"], $signing_assets_path)
     repo.config("user.name", git_user[0], global: false)
     repo.config("user.email", git_user[1], global: false)
 
     # Create Google Play Store key in the keystore file
     google_keystore = "keystores/google.jks"
-    if File.exist?("#{signing_assets_path}/#{google_keystore}")
-      decrypt("#{signing_assets_path}/#{google_keystore}")
+    if File.exist?("#{$signing_assets_path}/#{google_keystore}")
+      decrypt("#{$signing_assets_path}/#{google_keystore}")
     end
     id_segments = ENV["APP_IDENTIFIER"].split(".")
     keytool(
       command: "genkey",
-      keystore_path: "#{signing_assets_path}/#{google_keystore}",
+      keystore_path: "#{$signing_assets_path}/#{google_keystore}",
       keystore_password: ENV["MATCH_PASSWORD"],
       key_alias: ENV["APP_IDENTIFIER"],
       key_algorithm: "RSA",
@@ -97,7 +98,7 @@ lane :initial_provisioning do
       dname: "CN=#{id_segments.pop}, O=#{id_segments.pop}, OU=#{id_segments.pop}, L=City, S=State, C=US",
       verbose: true
     )
-    encrypt("#{signing_assets_path}/#{google_keystore}")
+    encrypt("#{$signing_assets_path}/#{google_keystore}")
     repo.add(google_keystore)
     repo.commit("[fastlane] Updated keystore and platform android")
     repo.push
@@ -108,7 +109,7 @@ lane :initial_provisioning do
       match(
         keychain_name: ENV["KEYCHAIN"],
         keychain_password: ENV["MATCH_PASSWORD"],
-        git_url: signing_assets_path,
+        git_url: $signing_assets_path,
         app_identifier: ENV["APP_IDENTIFIER"],
         api_key: apple_app_store_key,
         platform: platform,
@@ -143,10 +144,10 @@ lane :import_signingassets do
   )
 
   # Clean the signing assets repo
-  if Dir.exist?(signing_assets_path)
-    FileUtils.rm_rf(Dir.glob("#{signing_assets_path}/*"))
+  if Dir.exist?($signing_assets_path)
+    FileUtils.rm_rf(Dir.glob("#{$signing_assets_path}/*"))
   else
-    FileUtils.mkdir_p(signing_assets_path)
+    FileUtils.mkdir_p($signing_assets_path)
   end
 
   # Clone the signing assets repo
@@ -154,16 +155,17 @@ lane :import_signingassets do
     file.write(ENV["GIT_SSH_KEY"])
     file.chmod(0600)
     file.flush
+    
     ENV["GIT_SSH_COMMAND"] = "ssh -i #{file.path} -o IdentitiesOnly=yes"
-    repo = Git.clone(ENV["KEYS_GIT_URL"], signing_assets_path)
+    repo = Git.clone(ENV["KEYS_GIT_URL"], $signing_assets_path)
 
     # Generate Google keystore properties from the repo
     google_keystore = "keystores/google.jks"
-    if File.exist?("#{signing_assets_path}/#{google_keystore}")
-      decrypt("#{signing_assets_path}/#{google_keystore}")
+    if File.exist?("#{$signing_assets_path}/#{google_keystore}")
+      decrypt("#{$signing_assets_path}/#{google_keystore}")
       if File.exist?("../android/key.properties")
         File.open("../android/key.properties", "w") do |file|
-          file.puts "storeFile=#{signing_assets_path}/#{google_keystore}"
+          file.puts "storeFile=#{$signing_assets_path}/#{google_keystore}"
           file.puts "storePassword=#{ENV["MATCH_PASSWORD"]}"
           file.puts "keyAlias=#{ENV["APP_IDENTIFIER"]}"
           file.puts "keyPassword=#{ENV["MATCH_PASSWORD"]}"
@@ -177,7 +179,7 @@ lane :import_signingassets do
       match(
         keychain_name: ENV["KEYCHAIN"],
         keychain_password: ENV["MATCH_PASSWORD"],
-        git_url: signing_assets_path,
+        git_url: $signing_assets_path,
         app_identifier: ENV["APP_IDENTIFIER"],
         api_key: apple_app_store_key,
         platform: platform,
