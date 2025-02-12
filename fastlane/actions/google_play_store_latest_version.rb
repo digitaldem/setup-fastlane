@@ -14,6 +14,7 @@ module Fastlane
         api_key = params[:api_key]
         app_identifier = params[:app_identifier]
         live = params[:live]
+        versions = Set.new
 
         Actions.lane_context[SharedValues::LATEST_VERSION] = "0.0.0"
 
@@ -38,24 +39,23 @@ module Fastlane
           track_info = service.get_edit_track(app_identifier, edit.id, track)
           codes = track_info.releases.flat_map(&:version_codes).map { |code| code.to_s.rjust(9, "0") }
 
-          versions = Set.new
           codes.each do |code|
             # Convert the version code to semantic version string
             version = code.chars.each_slice(3).map { |slice| slice.join.to_i }.join(".")
             versions.add(Gem::Version.new(version))
           end
-
-          # Select the highest version found
-          latest_version = versions.max
-          unless latest_version
-            UI.important("No versions found in the #{track} track for #{app_identifier}")
-            return
-          end
-
-          Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
         rescue Exception => e
           UI.important("Error fetching track info: #{e.message}")
         end
+
+        # Select the highest version found
+        latest_version = versions.max
+        unless latest_version
+          UI.important("No versions found in the #{track} track for #{app_identifier}")
+          return
+        end
+
+        Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
       end
 
       def self.description
