@@ -12,7 +12,6 @@ module Fastlane
         live = params[:live]
         versions = Set.new
 
-        Actions.lane_context[SharedValues::LATEST_VERSION] = "0.0.0"
         UI.message("Fetching version list for #{app_identifier} on Apple App Store")
 
         # Fetch latest version for each platform
@@ -35,9 +34,8 @@ module Fastlane
         latest_version = versions.max
         unless latest_version
           UI.important("No versions found in for #{app_identifier}")
-          return
+          latest_version = Gem::Version.new("0.0.0")
         end
-
         Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
       end
 
