@@ -133,7 +133,7 @@ platform :apple do
       skip_package_ipa: false,
       output_directory: "./builds/tvOS",
       output_name: "#{ENV["SCHEME"]}.ipa",
-      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{keychains_path}/#{ENV["KEYCHAIN"]}-db' TVOS_DEPLOYMENT_TARGET=17.0",
+      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' TVOS_DEPLOYMENT_TARGET=17.0",
       clean: true,
       export_method: "app-store",
       export_options: {
@@ -152,7 +152,7 @@ platform :apple do
       api_key: get_apple_app_store_key,
       ipa: "./builds/tvOS/#{ENV["SCHEME"]}.ipa",
       app_platform: "appletvos",
-      changelog: changelog,
+      changelog: $changelog,
       notify_external_testers: false
     )
   end
@@ -169,7 +169,7 @@ platform :apple do
       skip_package_ipa: false,
       output_directory: "./builds/iOS",
       output_name: "#{ENV["SCHEME"]}.ipa",
-      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{keychains_path}/#{ENV["KEYCHAIN"]}-db' IPHONEOS_DEPLOYMENT_TARGET=17.0",
+      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' IPHONEOS_DEPLOYMENT_TARGET=17.0",
       catalyst_platform: "ios",
       clean: true,
       export_method: "app-store",
@@ -189,7 +189,7 @@ platform :apple do
       api_key: get_apple_app_store_key,
       ipa: "./builds/iOS/#{ENV["SCHEME"]}.ipa",
       app_platform: "ios",
-      changelog: changelog,
+      changelog: $changelog,
       notify_external_testers: false
     )
   end
@@ -206,7 +206,7 @@ platform :apple do
       skip_package_ipa: false,
       output_directory: "./builds/macOS",
       output_name: "#{ENV["SCHEME"]}",
-      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=10.15 EFFECTIVE_PLATFORM_NAME=''",
+      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=10.15 EFFECTIVE_PLATFORM_NAME=''",
       catalyst_platform: "macos",
       clean: true,
       export_method: "app-store",
@@ -226,7 +226,7 @@ platform :apple do
       api_key: get_apple_app_store_key,
       pkg: "./builds/macOS/#{ENV["SCHEME"]}.pkg",
       app_platform: "osx",
-      changelog: changelog,
+      changelog: $changelog,
       notify_external_testers: false
     )
   end
