@@ -4,7 +4,7 @@ require "stringio"
 
 module Fastlane
   module Actions
-    module SharedValues
+    module GooglePlayStoreSharedValues
       LATEST_VERSION = :LATEST_VERSION
     end
 
@@ -55,7 +55,7 @@ module Fastlane
         end
         
         # Set the lane's shared value result
-        Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
+        Actions.lane_context[GooglePlayStoreSharedValues::LATEST_VERSION] = latest_version.to_s
       end
 
       def self.description
