@@ -51,9 +51,8 @@ module Fastlane
         latest_version = versions.max
         unless latest_version
           UI.important("No versions found in the #{track} track for #{app_identifier}")
-          return
+          latest_version = Gem::Version.new("0.0.0")
         end
-
         Actions.lane_context[SharedValues::LATEST_VERSION] = latest_version.to_s
       end
 
