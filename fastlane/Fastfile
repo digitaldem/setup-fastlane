@@ -226,12 +226,13 @@ end
 
 def get_google_play_store_key()
   # Google Play Store API setup
-  ENV["PLAY_STORE_KEY"] || ""
+  ENV["PLAY_STORE_KEY"] || "{}"
 end
 
 def increment_version_patch()
   # Check the latest version string in Test Flight
   apple_app_store_key = get_apple_app_store_key()
+  puts apple_app_store_key
   app_store_build_number(
     api_key: apple_app_store_key,
     app_identifier: ENV["APP_IDENTIFIER"],
