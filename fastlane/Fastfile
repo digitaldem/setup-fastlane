@@ -163,13 +163,11 @@ lane :import_signingassets do
     google_keystore = "keystores/google.jks"
     if File.exist?("#{$signing_assets_path}/#{google_keystore}")
       decrypt("#{$signing_assets_path}/#{google_keystore}")
-      if File.exist?("../android/key.properties")
-        File.open("../android/key.properties", "w") do |file|
-          file.puts "storeFile=#{$signing_assets_path}/#{google_keystore}"
-          file.puts "storePassword=#{ENV["MATCH_PASSWORD"]}"
-          file.puts "keyAlias=#{ENV["APP_IDENTIFIER"]}"
-          file.puts "keyPassword=#{ENV["MATCH_PASSWORD"]}"
-        end
+      File.open("../android/key.properties", "w") do |file|
+        file.puts "storeFile=#{$signing_assets_path}/#{google_keystore}"
+        file.puts "storePassword=#{ENV["MATCH_PASSWORD"]}"
+        file.puts "keyAlias=#{ENV["APP_IDENTIFIER"]}"
+        file.puts "keyPassword=#{ENV["MATCH_PASSWORD"]}"
       end
     end
 
