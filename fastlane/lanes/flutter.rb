@@ -51,21 +51,21 @@ platform :flutter do
     Dir.chdir("..") do
       # Run flutter build to create release artifact for each platform
       begin
-        build_ios
+        _build_ios
       rescue => e
         UI.error("iOS build failed: #{e}")
         build_failures.push("iOS")
       end
 
       begin
-        build_android
+        _build_android
       rescue => e
         UI.error("Android build failed: #{e}")
         build_failures.push("Android")
       end
 
       begin
-        build_web
+        _build_web
       rescue => e
         UI.error("Web build failed: #{e}")
         build_failures.push("Web")
@@ -83,21 +83,21 @@ platform :flutter do
 
     Dir.chdir("..") do
       begin
-        upload_ios
+        _upload_ios
       rescue => e
         UI.error("iOS upload failed: #{e}")
         upload_failures.push("iOS")
       end
 
       begin
-        upload_android
+        _upload_android
       rescue => e
         UI.error("Android upload failed: #{e}")
         upload_failures.push("Android")
       end
 
       begin
-        upload_web
+        _upload_web
       rescue => e
         UI.error("Web upload failed: #{e}")
         upload_failures.push("Web")
@@ -111,13 +111,13 @@ platform :flutter do
 
   # Private lanes
   desc "Build iOS app"
-  private lane :build_ios do
+  lane :_build_ios do
     # Build iOS ipa
     flutter_build("ipa")
   end
 
   desc "Upload iOS app"
-  private lane :upload_ios do
+  lane :_upload_ios do
     # Upload iOS ipa
     upload_to_testflight(
       api_key: apple_api_key,
@@ -129,13 +129,13 @@ platform :flutter do
   end
 
   desc "Build Android app"
-  private lane :build_android do
+  lane :_build_android do
     # Build Android app bundle
     flutter_build("appbundle")
   end
 
   desc "Upload Android app"
-  private lane :upload_android do
+  lane :_upload_android do
     # Upload Android aab
     Tempfile.open(["temp", ".json"]) do |tempfile|
       tempfile.write(google_api_key)
@@ -150,13 +150,13 @@ platform :flutter do
   end
 
   desc "Build Web app"
-  private lane :build_web do
+  lane :_build_web do
     # Biuld web app
     flutter_build("web")
   end
 
   desc "Upload Web app"
-  private lane :upload_web do
+  lane :_upload_web do
     # Upload web app
   end
 
