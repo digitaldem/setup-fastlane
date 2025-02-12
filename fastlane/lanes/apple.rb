@@ -60,7 +60,7 @@ platform :apple do
 
     # Build tvOS
     begin
-      build_tvos
+      _build_tvos
     rescue => e
       UI.error("tvOS build failed: #{e}")
       build_failures.push("tvOS")
@@ -68,7 +68,7 @@ platform :apple do
 
     # Build iOS
     begin
-      build_ios
+      _build_ios
     rescue => e
       UI.error("iOS build failed: #{e}")
       build_failures.push("iOS")
@@ -76,7 +76,7 @@ platform :apple do
 
     # Build macOS (Catalyst)
     begin
-      build_macos
+      _build_macos
     rescue => e
       UI.error("macOS (Catalyst) build failed: #{e}")
       build_failures.push("macOS")
@@ -93,7 +93,7 @@ platform :apple do
 
     # Upload tvOS
     begin
-      upload_tvos
+      _upload_tvos
     rescue => e
       UI.error("tvOS upload failed: #{e}")
       upload_failures.push("tvOS")
@@ -101,7 +101,7 @@ platform :apple do
 
     # Upload iOS
     begin
-      upload_ios
+      _upload_ios
     rescue => e
       UI.error("iOS upload failed: #{e}")
       upload_failures.push("iOS")
@@ -109,7 +109,7 @@ platform :apple do
 
     # Upload macOS (Catalyst)
     begin
-      upload_macos
+      _upload_macos
     rescue => e
       UI.error("macOS (Catalyst) upload failed: #{e}")
       upload_failures.push("macOS")
@@ -122,7 +122,7 @@ platform :apple do
 
   # Private lanes
   desc "Build tvOS app"
-  private lane :build_tvos do
+  lane :_build_tvos do
     # Perform XCode build
     gym(
       project: ENV["PROJECT"],
@@ -146,7 +146,7 @@ platform :apple do
   end
 
   desc "Upload tvOS app to TestFlight"
-  private lane :upload_tvos do
+  lane :_upload_tvos do
     # Upload tvOS ipa
     upload_to_testflight(
       api_key: api_key,
@@ -158,7 +158,7 @@ platform :apple do
   end
 
   desc "Build iOS app"
-  private lane :build_ios do
+  lane :_build_ios do
     # Perform XCode build
     gym(
       project: ENV["PROJECT"],
@@ -183,7 +183,7 @@ platform :apple do
   end
 
   desc "Upload iOS app to TestFlight"
-  private lane :upload_ios do
+  lane :_upload_ios do
     # Upload iOS ipa
     upload_to_testflight(
       api_key: api_key,
@@ -195,7 +195,7 @@ platform :apple do
   end
 
   desc "Build macOS app"
-  private lane :build_macos do
+  lane :_build_macos do
     # Perform XCode build
     gym(
       project: ENV["PROJECT"],
@@ -220,7 +220,7 @@ platform :apple do
   end
 
   desc "Upload macOS app to TestFlight"
-  private lane :upload_macos do
+  lane :_upload_macos do
     # Upload macOS pkg
     upload_to_testflight(
       api_key: api_key,
