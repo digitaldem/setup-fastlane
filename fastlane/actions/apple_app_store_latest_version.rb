@@ -13,9 +13,9 @@ module Fastlane
         versions = Set.new
 
         Actions.lane_context[SharedValues::LATEST_VERSION] = "0.0.0"
+        UI.message("Fetching version list for #{app_identifier} on Apple App Store")
 
         # Fetch latest version for each platform
-        UI.message("Fetching version list for #{app_identifier} on Apple App Store")
         %w[appletvos ios osx].each do |platform|
           begin
             other_action.app_store_build_number(
