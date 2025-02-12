@@ -47,31 +47,13 @@ module Fastlane
         unless status.success?
           UI.user_error!("== Command Failed ==\nExit Status: #{status.exitstatus}\nOutput: #{output}")
         end
-  
+
         # Return the exit status code
         status.exitstatus
       end
 
       def self.description
-        "Interface with the keytool command to manage keystores and certificates for Android app signing"
-      end
-
-      def self.authors
-        ["Dave"]
-      end
-
-      def self.output
-        [
-          ["KEYTOOL_OUTPUT", "The raw stdout/stderr output of the keytool command"]
-        ]
-      end
-      
-      def self.return_value
-        "The exit status code of the keytool command"
-      end
-
-      def self.details
-        "This action wraps the keytool command, allowing the use of its full set of options"
+        "Interface with the keytool command to manage keystores and certificates for app signing"
       end
 
       def self.available_options
@@ -168,6 +150,20 @@ module Fastlane
                                        optional: true,
                                        type: String)
         ]
+      end
+
+      def self.output
+        [
+          ["KEYTOOL_OUTPUT", "The raw stdout/stderr output of the keytool command"]
+        ]
+      end
+
+      def self.return_value
+        "The exit status code of the keytool command"
+      end
+
+      def self.authors
+        ["DigitalDementia"]
       end
 
       def self.is_supported?(platform)
