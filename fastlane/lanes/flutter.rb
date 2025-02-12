@@ -49,6 +49,7 @@ platform :flutter do
     Actions.lane_context[:VERSION] = version
 
     Dir.chdir("..") do
+      puts Dir.pwd
       # Run flutter build to create release artifact for each platform
       begin
         _build_ios
@@ -82,6 +83,7 @@ platform :flutter do
     upload_failures = []
 
     Dir.chdir("..") do
+      puts Dir.pwd
       begin
         _upload_ios
       rescue => e
@@ -105,7 +107,7 @@ platform :flutter do
     end
 
     if upload_failures.any?
-      UI.crash!("Build(s) for the following targets failed: [#{upload_failures.join(" ")}]")
+      UI.crash!("Upload(s) for the following targets failed: [#{upload_failures.join(" ")}]")
     end
   end
 
