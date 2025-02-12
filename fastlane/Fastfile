@@ -22,10 +22,6 @@ require "tempfile"
 require "version"
 require "xcodeproj"
 
-#require_relative "./actions/apple_app_store_latest_version"
-#require_relative "./actions/google_play_store_latest_version"
-#require_relative "./actions/web_latest_version"
-
 # Skip README.md creation
 Fastlane::Actions::SkipDocsAction.run(nil)
 
@@ -78,7 +74,7 @@ lane :initial_provisioning do
     file.write(ENV["GIT_SSH_KEY"])
     file.chmod(0600)
     file.flush
-    
+
     ENV["GIT_SSH_COMMAND"] = "ssh -i #{file.path} -o IdentitiesOnly=yes"
     git_user = ENV["GIT_USER"].split(":")
     repo = Git.clone(ENV["KEYS_GIT_URL"], $signing_assets_path)
@@ -159,7 +155,7 @@ lane :import_signingassets do
     file.write(ENV["GIT_SSH_KEY"])
     file.chmod(0600)
     file.flush
-    
+
     ENV["GIT_SSH_COMMAND"] = "ssh -i #{file.path} -o IdentitiesOnly=yes"
     repo = Git.clone(ENV["KEYS_GIT_URL"], $signing_assets_path)
 
