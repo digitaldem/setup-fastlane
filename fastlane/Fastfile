@@ -206,7 +206,7 @@ lane :import_signingassets do
             force: false,
             verbose: false
           )
-        rescue Exception => e
+        rescue StandardError => e
           UI.important("Error fetching #{platform} info: #{e.message}")
         end
       end
