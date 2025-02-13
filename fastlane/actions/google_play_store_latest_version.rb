@@ -42,7 +42,7 @@ module Fastlane
             version = code.chars.each_slice(3).map { |slice| slice.join.to_i }.join(".")
             versions.add(Gem::Version.new(version))
           end
-        rescue Exception => e
+        rescue StandardError => e
           UI.important("Error fetching track info: #{e.message}")
         end
 
