@@ -65,7 +65,7 @@ platform :apple do
     if ios
       begin
         _build_ios
-      rescue => e
+      rescue StandardError => e
         UI.error("iOS build failed: #{e}")
         build_failures.push("iOS")
       end
@@ -75,7 +75,7 @@ platform :apple do
     if macos
       begin
         _build_macos
-      rescue => e
+      rescue StandardError => e
         UI.error("macOS (Catalyst) build failed: #{e}")
         build_failures.push("macOS")
       end
@@ -85,7 +85,7 @@ platform :apple do
     if tvos
       begin
         _build_tvos
-      rescue => e
+      rescue StandardError => e
         UI.error("tvOS build failed: #{e}")
         build_failures.push("tvOS")
       end
@@ -107,7 +107,7 @@ platform :apple do
     if ios
       begin
         _upload_ios
-      rescue => e
+      rescue StandardError => e
         UI.error("iOS upload failed: #{e}")
         upload_failures.push("iOS")
       end
@@ -117,7 +117,7 @@ platform :apple do
     if macos
       begin
         _upload_macos
-      rescue => e
+      rescue StandardError => e
         UI.error("macOS (Catalyst) upload failed: #{e}")
         upload_failures.push("macOS")
       end
@@ -127,7 +127,7 @@ platform :apple do
     if tvos
       begin
         _upload_tvos
-      rescue => e
+      rescue StandardError => e
         UI.error("tvOS upload failed: #{e}")
         upload_failures.push("tvOS")
       end
