@@ -45,7 +45,13 @@ $signing_assets_path = "/tmp/SigningAssets"
 
 # Define common provisioning lanes
 desc "Uses Match for initial signing certificate and provisioning profile generation"
-lane :initial_provisioning do
+lane :initial_provisioning do |options|
+  android = options[:android] ? true : false
+  apple = []
+  apple.push("ios") if options[:ios]
+  apple.push("macos", "catalyst") if options[:macos]
+  apple.push("tvos") if options[:tvos]
+  
   # Remove the build keychain
   if File.exist?("#{$keychains_path}/#{ENV["KEYCHAIN"]}-db")
     delete_keychain(
@@ -81,52 +87,59 @@ lane :initial_provisioning do
     repo.config("user.name", git_user[0], global: false)
     repo.config("user.email", git_user[1], global: false)
 
-    # Create Google Play Store key in the keystore file
-    google_keystore = "keystores/google.jks"
-    if File.exist?("#{$signing_assets_path}/#{google_keystore}")
-      decrypt("#{$signing_assets_path}/#{google_keystore}")
-    end
-    id_segments = ENV["APP_IDENTIFIER"].split(".")
-    keytool(
-      command: "genkey",
-      keystore_path: "#{$signing_assets_path}/#{google_keystore}",
-      keystore_password: ENV["MATCH_PASSWORD"],
-      key_alias: ENV["APP_IDENTIFIER"],
-      key_algorithm: "RSA",
-      key_size: 2048,
-      validity: 10000,
-      dname: "CN=#{id_segments.pop}, O=#{id_segments.pop}, OU=#{id_segments.pop}, L=City, S=State, C=US",
-      verbose: true
-    )
-    encrypt("#{$signing_assets_path}/#{google_keystore}")
-    repo.add(google_keystore)
-    repo.commit("[fastlane] Updated keystore and platform android")
-    repo.push
-
-    # Create Apple signing certs and provisioning profiles with match
-    apple_app_store_key = get_apple_app_store_key()
-    %w[tvos ios macos catalyst].each do |platform|
-      match(
-        keychain_name: ENV["KEYCHAIN"],
-        keychain_password: ENV["MATCH_PASSWORD"],
-        git_url: $signing_assets_path,
-        app_identifier: ENV["APP_IDENTIFIER"],
-        api_key: apple_app_store_key,
-        platform: platform,
-        type: "appstore",
-        additional_cert_types: "mac_installer_distribution",
-        generate_apple_certs: true,
-        include_mac_in_profiles: true,
-        readonly: false,
-        force: true,
+    if android
+      # Create Google Play Store key in the keystore file
+      google_keystore = "keystores/google.jks"
+      if File.exist?("#{$signing_assets_path}/#{google_keystore}")
+        decrypt("#{$signing_assets_path}/#{google_keystore}")
+      end
+      id_segments = ENV["APP_IDENTIFIER"].split(".")
+      keytool(
+        command: "genkey",
+        keystore_path: "#{$signing_assets_path}/#{google_keystore}",
+        keystore_password: ENV["MATCH_PASSWORD"],
+        key_alias: ENV["APP_IDENTIFIER"],
+        key_algorithm: "RSA",
+        key_size: 2048,
+        validity: 10000,
+        dname: "CN=#{id_segments.pop}, O=#{id_segments.pop}, OU=#{id_segments.pop}, L=City, S=State, C=US",
         verbose: true
       )
+      encrypt("#{$signing_assets_path}/#{google_keystore}")
+      repo.add(google_keystore)
+      repo.commit("[fastlane] Updated keystore and platform android")
+      repo.push
+    end
+
+    if apple.any?
+      # Create Apple signing certs and provisioning profiles with match
+      apple_app_store_key = get_apple_app_store_key()
+      apple.each do |platform|
+        match(
+          keychain_name: ENV["KEYCHAIN"],
+          keychain_password: ENV["MATCH_PASSWORD"],
+          git_url: $signing_assets_path,
+          app_identifier: ENV["APP_IDENTIFIER"],
+          api_key: apple_app_store_key,
+          platform: platform,
+          type: "appstore",
+          additional_cert_types: "mac_installer_distribution",
+          generate_apple_certs: true,
+          include_mac_in_profiles: true,
+          readonly: false,
+          force: true,
+          verbose: true
+        )
+      end
     end
   end
 end
 
 desc "Import keystores, certificates and provisioning profiles"
 lane :import_signingassets do
+  android = true
+  apple = ["ios", "macos", "catalyst", "tvos"]
+  
   # Remove the build keychain
   if File.exist?("#{$keychains_path}/#{ENV["KEYCHAIN"]}-db")
     delete_keychain(
@@ -159,39 +172,43 @@ lane :import_signingassets do
     ENV["GIT_SSH_COMMAND"] = "ssh -i #{file.path} -o IdentitiesOnly=yes"
     repo = Git.clone(ENV["KEYS_GIT_URL"], $signing_assets_path)
 
-    # Generate Google keystore properties from the repo
-    google_keystore = "keystores/google.jks"
-    if File.exist?("#{$signing_assets_path}/#{google_keystore}")
-      decrypt("#{$signing_assets_path}/#{google_keystore}")
-      File.open("../android/key.properties", "w") do |file|
-        file.puts "storeFile=#{$signing_assets_path}/#{google_keystore}"
-        file.puts "storePassword=#{ENV["MATCH_PASSWORD"]}"
-        file.puts "keyAlias=#{ENV["APP_IDENTIFIER"]}"
-        file.puts "keyPassword=#{ENV["MATCH_PASSWORD"]}"
+    if android
+      # Generate Google keystore properties from the repo
+      google_keystore = "keystores/google.jks"
+      if File.exist?("#{$signing_assets_path}/#{google_keystore}")
+        decrypt("#{$signing_assets_path}/#{google_keystore}")
+        File.open("../android/key.properties", "w") do |file|
+          file.puts "storeFile=#{$signing_assets_path}/#{google_keystore}"
+          file.puts "storePassword=#{ENV["MATCH_PASSWORD"]}"
+          file.puts "keyAlias=#{ENV["APP_IDENTIFIER"]}"
+          file.puts "keyPassword=#{ENV["MATCH_PASSWORD"]}"
+        end
       end
     end
 
-    # Install Apple certs and profiles from the repo
-    apple_app_store_key = get_apple_app_store_key()
-    %w[tvos ios macos catalyst].each do |platform|
-      begin
-        match(
-          keychain_name: ENV["KEYCHAIN"],
-          keychain_password: ENV["MATCH_PASSWORD"],
-          git_url: $signing_assets_path,
-          app_identifier: ENV["APP_IDENTIFIER"],
-          api_key: apple_app_store_key,
-          platform: platform,
-          type: "appstore",
-          additional_cert_types: "mac_installer_distribution",
-          generate_apple_certs: true,
-          include_mac_in_profiles: true,
-          readonly: true,
-          force: false,
-          verbose: false
-        )
-      rescue Exception => e
-        UI.important("Error fetching #{platform} info: #{e.message}")
+    if apple.any?
+      # Install Apple certs and profiles from the repo
+      apple_app_store_key = get_apple_app_store_key()
+      apple.each do |platform|
+        begin
+          match(
+            keychain_name: ENV["KEYCHAIN"],
+            keychain_password: ENV["MATCH_PASSWORD"],
+            git_url: $signing_assets_path,
+            app_identifier: ENV["APP_IDENTIFIER"],
+            api_key: apple_app_store_key,
+            platform: platform,
+            type: "appstore",
+            additional_cert_types: "mac_installer_distribution",
+            generate_apple_certs: true,
+            include_mac_in_profiles: true,
+            readonly: true,
+            force: false,
+            verbose: false
+          )
+        rescue Exception => e
+          UI.important("Error fetching #{platform} info: #{e.message}")
+        end
       end
     end
   end
