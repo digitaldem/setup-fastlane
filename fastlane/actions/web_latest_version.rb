@@ -27,7 +27,7 @@ module Fastlane
 
           # Extract the version string
           versions.add(Gem::Version.new(version_data["version"]))
-        rescue Exception => e
+        rescue StandardError => e
           UI.important("Error fetching or parsing version.json: #{e.message}")
         end
         
