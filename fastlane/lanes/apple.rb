@@ -36,8 +36,11 @@ platform :apple do
     end
   end
 
-  desc "Build tvOS, iOS, and macOS apps"
-  lane :build do
+  desc "Build iOS, macOS, and tvOS apps"
+  lane :build do |options|
+    ios = options[:ios] ? true : false
+    macos = options[:macos] ? true : false
+    tvos = options[:tvos] ? true : false
     build_failures = []
 
     # Ensure plist has ITSAppUsesNonExemptEncryption declaration
@@ -58,63 +61,78 @@ platform :apple do
     end
     xcodeproj.save
 
-    # Build tvOS
-    begin
-      _build_tvos
-    rescue => e
-      UI.error("tvOS build failed: #{e}")
-      build_failures.push("tvOS")
-    end
-
     # Build iOS
-    begin
-      _build_ios
-    rescue => e
-      UI.error("iOS build failed: #{e}")
-      build_failures.push("iOS")
+    if ios
+      begin
+        _build_ios
+      rescue => e
+        UI.error("iOS build failed: #{e}")
+        build_failures.push("iOS")
+      end
     end
 
     # Build macOS (Catalyst)
-    begin
-      _build_macos
-    rescue => e
-      UI.error("macOS (Catalyst) build failed: #{e}")
-      build_failures.push("macOS")
+    if macos
+      begin
+        _build_macos
+      rescue => e
+        UI.error("macOS (Catalyst) build failed: #{e}")
+        build_failures.push("macOS")
+      end
     end
 
+    # Build tvOS
+    if tvos
+      begin
+        _build_tvos
+      rescue => e
+        UI.error("tvOS build failed: #{e}")
+        build_failures.push("tvOS")
+      end
+    end
+    
     if build_failures.any?
       UI.crash!("Build(s) for the following targets failed: [#{build_failures.join(" ")}]")
     end
   end
 
   desc "Upload tvOS, iOS, and macOS apps to TestFlight"
-  lane :upload do
+  lane :upload do |options|
+    ios = options[:ios] ? true : false
+    macos = options[:macos] ? true : false
+    tvos = options[:tvos] ? true : false
     upload_failures = []
 
-    # Upload tvOS
-    begin
-      _upload_tvos
-    rescue => e
-      UI.error("tvOS upload failed: #{e}")
-      upload_failures.push("tvOS")
-    end
-
     # Upload iOS
-    begin
-      _upload_ios
-    rescue => e
-      UI.error("iOS upload failed: #{e}")
-      upload_failures.push("iOS")
+    if ios
+      begin
+        _upload_ios
+      rescue => e
+        UI.error("iOS upload failed: #{e}")
+        upload_failures.push("iOS")
+      end
     end
 
     # Upload macOS (Catalyst)
-    begin
-      _upload_macos
-    rescue => e
-      UI.error("macOS (Catalyst) upload failed: #{e}")
-      upload_failures.push("macOS")
+    if macos
+      begin
+        _upload_macos
+      rescue => e
+        UI.error("macOS (Catalyst) upload failed: #{e}")
+        upload_failures.push("macOS")
+      end
     end
 
+    # Upload tvOS
+    if tvos
+      begin
+        _upload_tvos
+      rescue => e
+        UI.error("tvOS upload failed: #{e}")
+        upload_failures.push("tvOS")
+      end
+    end
+    
     if upload_failures.any?
       UI.crash!("Build(s) for the following targets failed: [#{upload_failures.join(" ")}]")
     end
