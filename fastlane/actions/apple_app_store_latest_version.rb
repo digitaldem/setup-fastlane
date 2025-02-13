@@ -25,7 +25,7 @@ module Fastlane
             )
             version = lane_context[SharedValues::LATEST_VERSION]
             versions.add(Gem::Version.new(version))
-          rescue Exception => e
+          rescue StandardError => e
             UI.important("Error fetching #{platform} info: #{e.message}")
           end
         end
