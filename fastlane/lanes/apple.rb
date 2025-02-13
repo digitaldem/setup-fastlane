@@ -139,42 +139,6 @@ platform :apple do
   end
 
   # Private lanes
-  desc "Build tvOS app"
-  lane :_build_tvos do
-    # Perform XCode build
-    gym(
-      project: ENV["PROJECT"],
-      scheme: ENV["SCHEME"],
-      configuration: "Release",
-      sdk: "appletvos",
-      destination: "generic/platform=tvOS",
-      skip_package_ipa: false,
-      output_directory: "./builds/tvOS",
-      output_name: "#{ENV["SCHEME"]}.ipa",
-      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' TVOS_DEPLOYMENT_TARGET=17.0",
-      clean: true,
-      export_method: "app-store",
-      export_options: {
-        provisioningProfiles: {
-          ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]} tvos"
-        },
-        compileBitcode: true
-      }
-    )
-  end
-
-  desc "Upload tvOS app to TestFlight"
-  lane :_upload_tvos do
-    # Upload tvOS ipa
-    upload_to_testflight(
-      api_key: get_apple_app_store_key,
-      ipa: "./builds/tvOS/#{ENV["SCHEME"]}.ipa",
-      app_platform: "appletvos",
-      changelog: $changelog,
-      notify_external_testers: false
-    )
-  end
-
   desc "Build iOS app"
   lane :_build_ios do
     # Perform XCode build
@@ -244,6 +208,42 @@ platform :apple do
       api_key: get_apple_app_store_key,
       pkg: "./builds/macOS/#{ENV["SCHEME"]}.pkg",
       app_platform: "osx",
+      changelog: $changelog,
+      notify_external_testers: false
+    )
+  end
+
+  desc "Build tvOS app"
+  lane :_build_tvos do
+    # Perform XCode build
+    gym(
+      project: ENV["PROJECT"],
+      scheme: ENV["SCHEME"],
+      configuration: "Release",
+      sdk: "appletvos",
+      destination: "generic/platform=tvOS",
+      skip_package_ipa: false,
+      output_directory: "./builds/tvOS",
+      output_name: "#{ENV["SCHEME"]}.ipa",
+      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' TVOS_DEPLOYMENT_TARGET=17.0",
+      clean: true,
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]} tvos"
+        },
+        compileBitcode: true
+      }
+    )
+  end
+
+  desc "Upload tvOS app to TestFlight"
+  lane :_upload_tvos do
+    # Upload tvOS ipa
+    upload_to_testflight(
+      api_key: get_apple_app_store_key,
+      ipa: "./builds/tvOS/#{ENV["SCHEME"]}.ipa",
+      app_platform: "appletvos",
       changelog: $changelog,
       notify_external_testers: false
     )
