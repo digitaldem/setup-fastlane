@@ -53,21 +53,21 @@ platform :flutter do
       # Run flutter build to create release artifact for each platform
       begin
         _build_ios
-      rescue => e
+      rescue StandardError => e
         UI.error("iOS build failed: #{e}")
         build_failures.push("iOS")
       end
 
       begin
         _build_android
-      rescue => e
+      rescue StandardError => e
         UI.error("Android build failed: #{e}")
         build_failures.push("Android")
       end
 
       begin
         _build_web
-      rescue => e
+      rescue StandardError => e
         UI.error("Web build failed: #{e}")
         build_failures.push("Web")
       end
@@ -93,21 +93,21 @@ platform :flutter do
 
       begin
         _upload_ios
-      rescue => e
+      rescue StandardError => e
         UI.error("iOS upload failed: #{e}")
         upload_failures.push("iOS")
       end
 
       begin
         _upload_android
-      rescue => e
+      rescue StandardError => e
         UI.error("Android upload failed: #{e}")
         upload_failures.push("Android")
       end
 
       begin
         _upload_web
-      rescue => e
+      rescue StandardError => e
         UI.error("Web upload failed: #{e}")
         upload_failures.push("Web")
       end
