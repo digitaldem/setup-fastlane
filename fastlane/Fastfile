@@ -222,7 +222,6 @@ import "./lanes/flutter.rb"
 def execute_command(cmd)
   UI.command(cmd)
   output, status = Open3.capture2(cmd, err: [:child, :out])
-  puts output
   unless status.success?
     UI.user_error!("== Command Failed ==\nExit Status: #{status.exitstatus}\nOutput: #{output}")
   end
