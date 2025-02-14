@@ -122,7 +122,7 @@ platform :flutter do
   desc "Build iOS app"
   lane :_build_ios do
     # Build iOS ipa
-    flutter_build("ipa")
+    flutter_build("ipa", { "export-options-plist" => "./ios/ExportOptions.plist" })
   end
 
   desc "Upload iOS app"
@@ -140,7 +140,7 @@ platform :flutter do
   desc "Build Android app"
   lane :_build_android do
     # Build Android app bundle
-    flutter_build("appbundle")
+    flutter_build("appbundle", nil)
   end
 
   desc "Upload Android app"
@@ -161,7 +161,7 @@ platform :flutter do
   desc "Build Web app"
   lane :_build_web do
     # Biuld web app
-    flutter_build("web")
+    flutter_build("web", nil)
   end
 
   desc "Upload Web app"
@@ -170,10 +170,11 @@ platform :flutter do
   end
 
   # Helper functions
-  def flutter_build(artifact)
+  def flutter_build(artifact, options)
     version = Actions.lane_context[:VERSION]
     number = version.split(".").map { |segment| segment.rjust(3, "0") }.join.to_i
-    result = execute_command("flutter build #{artifact} --release --build-name #{version} --build-number #{number}")
+    extra = options&.map { |key, value| "--#{key} #{value}" }&.join(" ") || ""
+    result = execute_command("flutter build #{artifact} --release --build-name #{version} --build-number #{number} #{extra}")
   end
 
 end
