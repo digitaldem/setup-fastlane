@@ -81,7 +81,7 @@ platform :flutter do
   lane :upload do
     upload_failures = []
 
-    #Dir.chdir("..") do
+    Dir.chdir("..") do
       begin
         _upload_ios
       rescue StandardError => e
@@ -102,7 +102,7 @@ platform :flutter do
         UI.error("Web upload failed: #{e}")
         upload_failures.push("Web")
       end
-    #end
+    end
 
     if upload_failures.any?
       UI.crash!("Upload(s) for the following targets failed: [#{upload_failures.join(" ")}]")
@@ -119,7 +119,11 @@ platform :flutter do
   desc "Upload iOS app"
   lane :_upload_ios do
     # Upload iOS ipa
-    ipa = Dir.glob(File.join("./build/ios/ipa", "*.ipa")).max_by { |f| File.mtime(f) }
+    puts Dir.pwd
+    Dir.entries(Dir.pwd).each { |f| puts f }
+    
+    ipa = Dir.glob(File.join("./build/ios/ipa", "*.ipa")).max_by { |f| File.mtime(f) }&.then { |f| File.expand_path(f) }
+    puts ipa
     upload_to_testflight(
       api_key: get_apple_app_store_key(),
       ipa: ipa,
@@ -138,7 +142,11 @@ platform :flutter do
   desc "Upload Android app"
   lane :_upload_android do
     # Upload Android aab
-    aab = Dir.glob(File.join("./build/app/outputs/bundle/release", "*.aab")).max_by { |f| File.mtime(f) }
+    puts Dir.pwd
+    Dir.entries(Dir.pwd).each { |f| puts f }
+    
+    aab = Dir.glob(File.join("./build/app/outputs/bundle/release", "*.aab")).max_by { |f| File.mtime(f) }&.then { |f| File.expand_path(f) }
+    puts aab
     Tempfile.open(["temp", ".json"]) do |tempfile|
       tempfile.write(get_google_play_store_key().to_json())
       tempfile.flush
