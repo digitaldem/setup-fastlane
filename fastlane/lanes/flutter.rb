@@ -81,7 +81,7 @@ platform :flutter do
   lane :upload do
     upload_failures = []
 
-    Dir.chdir("..") do
+    #Dir.chdir("..") do
       begin
         _upload_ios
       rescue StandardError => e
@@ -102,7 +102,7 @@ platform :flutter do
         UI.error("Web upload failed: #{e}")
         upload_failures.push("Web")
       end
-    end
+    #end
 
     if upload_failures.any?
       UI.crash!("Upload(s) for the following targets failed: [#{upload_failures.join(" ")}]")
