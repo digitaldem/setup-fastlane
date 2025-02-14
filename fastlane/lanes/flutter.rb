@@ -49,7 +49,6 @@ platform :flutter do
     Actions.lane_context[:VERSION] = version
 
     Dir.chdir("..") do
-      puts Dir.pwd
       # Run flutter build to create release artifact for each platform
       begin
         _build_ios
@@ -83,14 +82,6 @@ platform :flutter do
     upload_failures = []
 
     Dir.chdir("..") do
-      dir_path = "./build/ios"
-      puts dir_path
-      Dir.entries(dir_path).each { |file| puts file }
-
-      dir_path = "./build/ios/archive"
-      puts dir_path
-      Dir.entries(dir_path).each { |file| puts file }
-
       begin
         _upload_ios
       rescue StandardError => e
@@ -130,7 +121,7 @@ platform :flutter do
     # Upload iOS ipa
     upload_to_testflight(
       api_key: get_apple_app_store_key(),
-      ipa: "./build/ios/archive/#{ENV["SCHEME"]}.ipa",
+      ipa: "./build/ios/ipa/#{ENV["SCHEME"]}.ipa",
       app_platform: "ios",
       changelog: $changelog,
       notify_external_testers: false
