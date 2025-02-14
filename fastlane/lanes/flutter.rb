@@ -119,6 +119,9 @@ platform :flutter do
   desc "Upload iOS app"
   lane :_upload_ios do
     # Upload iOS ipa
+    puts Dir.pwd
+    Dir.entries("./build/ios/ipa").each { |file| puts file }
+    
     upload_to_testflight(
       api_key: get_apple_app_store_key(),
       ipa: "./build/ios/ipa/#{ENV["SCHEME"]}.ipa",
@@ -137,6 +140,9 @@ platform :flutter do
   desc "Upload Android app"
   lane :_upload_android do
     # Upload Android aab
+    puts Dir.pwd
+    Dir.entries("./build/app/outputs/bundle/release").each { |file| puts file }
+
     Tempfile.open(["temp", ".json"]) do |tempfile|
       tempfile.write(get_google_play_store_key().to_json())
       tempfile.flush
