@@ -41,7 +41,10 @@ platform :flutter do
   end
 
   desc "Run flutter build for all target platforms"
-  lane :build do
+  lane :build do |options|
+    ios = options[:ios] ? true : false
+    android = options[:android] ? true : false
+    web = options[:web] ? true : false
     build_failures = []
 
     # Increment version patch number
@@ -50,25 +53,31 @@ platform :flutter do
 
     Dir.chdir("..") do
       # Run flutter build to create release artifact for each platform
-      begin
-        _build_ios
-      rescue StandardError => e
-        UI.error("iOS build failed: #{e}")
-        build_failures.push("iOS")
+      if ios
+        begin
+          _build_ios
+        rescue StandardError => e
+          UI.error("iOS build failed: #{e}")
+          build_failures.push("iOS")
+        end
       end
 
-      begin
-        _build_android
-      rescue StandardError => e
-        UI.error("Android build failed: #{e}")
-        build_failures.push("Android")
+      if android
+        begin
+          _build_android
+        rescue StandardError => e
+          UI.error("Android build failed: #{e}")
+          build_failures.push("Android")
+        end
       end
 
-      begin
-        _build_web
-      rescue StandardError => e
-        UI.error("Web build failed: #{e}")
-        build_failures.push("Web")
+      if web
+        begin
+          _build_web
+        rescue StandardError => e
+          UI.error("Web build failed: #{e}")
+          build_failures.push("Web")
+        end
       end
     end
 
@@ -78,29 +87,38 @@ platform :flutter do
   end
 
   desc "Upload artifacts to app stores"
-  lane :upload do
+  lane :upload do |options|
+    ios = options[:ios] ? true : false
+    android = options[:android] ? true : false
+    web = options[:web] ? true : false
     upload_failures = []
 
     Dir.chdir("..") do
-      begin
-        _upload_ios
-      rescue StandardError => e
-        UI.error("iOS upload failed: #{e}")
-        upload_failures.push("iOS")
+      if ios
+        begin
+          _upload_ios
+        rescue StandardError => e
+          UI.error("iOS upload failed: #{e}")
+          upload_failures.push("iOS")
+        end
       end
 
-      begin
-        _upload_android
-      rescue StandardError => e
-        UI.error("Android upload failed: #{e}")
-        upload_failures.push("Android")
+      if android
+        begin
+          _upload_android
+        rescue StandardError => e
+          UI.error("Android upload failed: #{e}")
+          upload_failures.push("Android")
+        end
       end
 
-      begin
-        _upload_web
-      rescue StandardError => e
-        UI.error("Web upload failed: #{e}")
-        upload_failures.push("Web")
+      if web
+        begin
+          _upload_web
+        rescue StandardError => e
+          UI.error("Web upload failed: #{e}")
+          upload_failures.push("Web")
+        end
       end
     end
 
@@ -113,17 +131,14 @@ platform :flutter do
   desc "Build iOS app"
   lane :_build_ios do
     # Build iOS ipa
-    flutter_build("ipa", { "export-options-plist" => "./ios/ExportOptions.plist" })
+    version = Actions.lane_context[:VERSION] || "0.0.0"
+    flutter_build("ipa", version, { "export-options-plist" => "./ios/ExportOptions.plist" })
   end
 
   desc "Upload iOS app"
   lane :_upload_ios do
     # Upload iOS ipa
-    puts Dir.pwd
-    Dir.entries(Dir.pwd).each { |f| puts f }
-    
     ipa = Dir.glob(File.join("./build/ios/ipa", "*.ipa")).max_by { |f| File.mtime(f) }&.then { |f| File.expand_path(f) }
-    puts ipa
     upload_to_testflight(
       api_key: get_apple_app_store_key(),
       ipa: ipa,
@@ -136,17 +151,14 @@ platform :flutter do
   desc "Build Android app"
   lane :_build_android do
     # Build Android app bundle
-    flutter_build("appbundle", nil)
+    version = Actions.lane_context[:VERSION] || "0.0.0"
+    flutter_build("appbundle", version, nil)
   end
 
   desc "Upload Android app"
   lane :_upload_android do
     # Upload Android aab
-    puts Dir.pwd
-    Dir.entries(Dir.pwd).each { |f| puts f }
-    
     aab = Dir.glob(File.join("./build/app/outputs/bundle/release", "*.aab")).max_by { |f| File.mtime(f) }&.then { |f| File.expand_path(f) }
-    puts aab
     Tempfile.open(["temp", ".json"]) do |tempfile|
       tempfile.write(get_google_play_store_key().to_json())
       tempfile.flush
@@ -162,20 +174,21 @@ platform :flutter do
   desc "Build Web app"
   lane :_build_web do
     # Biuld web app
-    flutter_build("web", nil)
+    version = Actions.lane_context[:VERSION] || "0.0.0"
+    flutter_build("web", version, nil)
   end
 
   desc "Upload Web app"
   lane :_upload_web do
     # Upload web app
+    #TODO
   end
 
   # Helper functions
-  def flutter_build(artifact, options)
-    version = Actions.lane_context[:VERSION]
-    number = version.split(".").map { |segment| segment.rjust(3, "0") }.join.to_i
-    extra = options&.map { |key, value| "--#{key} #{value}" }&.join(" ") || ""
-    result = execute_command("flutter build #{artifact} --release --build-name #{version} --build-number #{number} #{extra}")
+  def flutter_build(artifact, version, options)
+    build_number = version.split(".").map { |segment| segment.rjust(3, "0") }.join.to_i
+    additional_args = options&.map { |key, value| "--#{key} #{value}" }&.join(" ") || ""
+    result = execute_command("flutter build #{artifact} --release --build-name #{version} --build-number #{build_number} #{additional_args}")
   end
 
 end

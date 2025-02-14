@@ -51,22 +51,6 @@ lane :initial_provisioning do |options|
   apple.push("ios") if options[:ios]
   apple.push("macos", "catalyst") if options[:macos]
   apple.push("tvos") if options[:tvos]
-  
-  # Remove the build keychain
-  if File.exist?("#{$keychains_path}/#{ENV["KEYCHAIN"]}-db")
-    delete_keychain(
-      name: ENV["KEYCHAIN"]
-    )
-  end
-
-  # Create the temp keychain
-  create_keychain(
-    name: ENV["KEYCHAIN"],
-    password: ENV["MATCH_PASSWORD"],
-    default_keychain: true,
-    unlock: true,
-    timeout: 3600
-  )
 
   # Clear or create the signing assets destination
   if Dir.exist?($signing_assets_path)
@@ -89,13 +73,14 @@ lane :initial_provisioning do |options|
 
     if android
       # Create Google Play Store key in the keystore file
+      id_segments = ENV["APP_IDENTIFIER"].split(".")
+      google_cert = "certs/google_play_distribution/#{random(10)}.pem"
       google_keystore = "keystores/google.jks"
       if File.exist?("#{$signing_assets_path}/#{google_keystore}")
         decrypt("#{$signing_assets_path}/#{google_keystore}")
       end
-      id_segments = ENV["APP_IDENTIFIER"].split(".")
       keytool(
-        command: "genkey",
+        command: "genkeypair",
         keystore_path: "#{$signing_assets_path}/#{google_keystore}",
         keystore_password: ENV["MATCH_PASSWORD"],
         key_alias: ENV["APP_IDENTIFIER"],
@@ -106,12 +91,34 @@ lane :initial_provisioning do |options|
         verbose: true
       )
       encrypt("#{$signing_assets_path}/#{google_keystore}")
+      keytool(
+        command: "exportcert",
+        keystore_path: "#{$signing_assets_path}/#{google_keystore}",
+        keystore_password: ENV["MATCH_PASSWORD"],
+        key_alias: ENV["APP_IDENTIFIER"],
+        file: "#{$signing_assets_path}/#{google_cert}",
+        rfc: true,
+      )
+      encrypt("#{$signing_assets_path}/#{google_cert}")
       repo.add(google_keystore)
-      repo.commit("[fastlane] Updated keystore and platform android")
+      repo.add(google_cert)
+      repo.commit("[fastlane] Updated keystore and certificate android")
       repo.push
     end
 
     if apple.any?
+      # Reset the build keychain
+      if File.exist?("#{$keychains_path}/#{ENV["KEYCHAIN"]}-db")
+        delete_keychain(name: ENV["KEYCHAIN"])
+      end
+      create_keychain(
+        name: ENV["KEYCHAIN"],
+        password: ENV["MATCH_PASSWORD"],
+        default_keychain: true,
+        unlock: true,
+        timeout: 3600
+      )
+
       # Create Apple signing certs and provisioning profiles with match
       apple_app_store_key = get_apple_app_store_key()
       apple.each do |platform|
@@ -139,22 +146,6 @@ desc "Import keystores, certificates and provisioning profiles"
 lane :import_signingassets do
   android = true
   apple = ["ios", "macos", "catalyst", "tvos"]
-  
-  # Remove the build keychain
-  if File.exist?("#{$keychains_path}/#{ENV["KEYCHAIN"]}-db")
-    delete_keychain(
-      name: ENV["KEYCHAIN"]
-    )
-  end
-
-  # Create the temp keychain
-  create_keychain(
-    name: ENV["KEYCHAIN"],
-    password: ENV["MATCH_PASSWORD"],
-    default_keychain: true,
-    unlock: true,
-    timeout: 3600
-  )
 
   # Clean the signing assets repo
   if Dir.exist?($signing_assets_path)
@@ -187,6 +178,18 @@ lane :import_signingassets do
     end
 
     if apple.any?
+      # Reset the build keychain
+      if File.exist?("#{$keychains_path}/#{ENV["KEYCHAIN"]}-db")
+        delete_keychain(name: ENV["KEYCHAIN"])
+      end
+      create_keychain(
+        name: ENV["KEYCHAIN"],
+        password: ENV["MATCH_PASSWORD"],
+        default_keychain: true,
+        unlock: true,
+        timeout: 3600
+      )
+
       # Install Apple certs and profiles from the repo
       apple_app_store_key = get_apple_app_store_key()
       apple.each do |platform|
@@ -226,6 +229,11 @@ def execute_command(cmd)
     UI.user_error!("== Command Failed ==\nExit Status: #{status.exitstatus}\nOutput: #{output}")
   end
   output
+end
+
+def random(length)
+  chars = ('0'..'9').to_a + ('A'..'Z').to_a
+  Array.new(length) { chars.sample }.join
 end
 
 def encrypt(file)
