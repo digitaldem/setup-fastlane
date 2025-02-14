@@ -119,12 +119,10 @@ platform :flutter do
   desc "Upload iOS app"
   lane :_upload_ios do
     # Upload iOS ipa
-    puts Dir.pwd
-    Dir.entries("./build/ios/ipa").each { |file| puts file }
-    
+    ipa = Dir.glob(File.join("./build/ios/ipa", "*.ipa")).max_by { |f| File.mtime(f) }
     upload_to_testflight(
       api_key: get_apple_app_store_key(),
-      ipa: "./build/ios/ipa/#{ENV["SCHEME"]}.ipa",
+      ipa: ipa,
       app_platform: "ios",
       changelog: $changelog,
       notify_external_testers: false
@@ -140,17 +138,15 @@ platform :flutter do
   desc "Upload Android app"
   lane :_upload_android do
     # Upload Android aab
-    puts Dir.pwd
-    Dir.entries("./build/app/outputs/bundle/release").each { |file| puts file }
-
+    aab = Dir.glob(File.join("./build/app/outputs/bundle/release", "*.aab")).max_by { |f| File.mtime(f) }
     Tempfile.open(["temp", ".json"]) do |tempfile|
       tempfile.write(get_google_play_store_key().to_json())
       tempfile.flush
       supply(
         json_key: tempfile.path,
+        aab: aab,
         package_name: ENV["APP_IDENTIFIER"],
-        track: "internal",
-        aab: "./build/app/outputs/bundle/release/app-release.aab"
+        track: "internal"
       )
     end
   end
