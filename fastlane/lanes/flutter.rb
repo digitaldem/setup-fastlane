@@ -166,7 +166,8 @@ platform :flutter do
         json_key: tempfile.path,
         aab: aab,
         package_name: ENV["APP_IDENTIFIER"],
-        track: "internal"
+        track: "internal",
+        release_status: "draft"
       )
     end
   end
