@@ -256,11 +256,14 @@ platform :apple do
     # Get list of available simulators
     simctl_list = Actions.sh_no_action("xcrun simctl list devices -j", log: false)
     simulators = JSON.parse(simctl_list)
+    puts simulators
     simulators["devices"].each do |runtime, devices|
+      puts runtime
       # Parse the version string from the runtime and process each device
       next unless runtime.include?("iOS")
       version = runtime.match(/iOS-(\d+-\d+)/)&.captures&.first&.tr('-', '.')
       devices.each do |device|
+        puts device
         next unless device["name"].include?("iPhone") && device["isAvailable"]
         devices.push({ "id" => device["udid"], "model" => device["name"], "version" => version })
       end
