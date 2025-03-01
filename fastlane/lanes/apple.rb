@@ -262,7 +262,7 @@ platform :apple do
       version = runtime.match(/iOS-(\d+-\d+)/)&.captures&.first&.tr('-', '.')
       devices.each do |device|
         next unless device["name"].include?("iPhone") && device["isAvailable"]
-        devices.push({ "id" => device["udid"], "model" => device["name"], version" => version })
+        devices.push({ "id" => device["udid"], "model" => device["name"], "version" => version })
       end
     end
 
