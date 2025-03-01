@@ -251,36 +251,30 @@ platform :apple do
 
   # Helper functions
   def select_iphone_simulator
-    devices = []
+    iphone_simulators = []
     
     # Get list of available simulators
-    simctl_list = Actions.sh_no_action("xcrun simctl list devices -j", log: false)
-    simulators = JSON.parse(simctl_list)
-
-    simulators["devices"].each do |runtime, devices|
-      # Parse the version string from the runtime and process each device
+    simctl_list = JSON.parse(Actions.sh_no_action("xcrun simctl list devices -j", log: false))
+    simctl_list["devices"].each do |runtime, simulators|
+      # Parse the version string from the runtime and process each simulator
       next unless runtime.include?("iOS")
       version = runtime.match(/iOS-(\d+-\d+)/)&.captures&.first&.tr('-', '.')
-      devices.each do |device|
-        puts device
-        puts device["name"]
-        
-        next unless device["name"].include?("iPhone") && device["isAvailable"]
-        devices.push({ "id" => device["udid"], "model" => device["name"], "version" => version })
+      simulators.each do |simulator|
+        next unless simulator["name"].include?("iPhone") && simulator["isAvailable"]
+        iphone_simulators.push({ "id" => simulator["udid"], "model" => simulator["name"], "version" => version })
       end
     end
 
     # Abort if there is no viable simulator
-    if devices.empty?
+    if iphone_simulators.empty?
       UI.user_error!("Could not find an appropriate simulator.")
     end
-
-    puts devices
     
-    # Return "latest" simulator id
-    device_id = devices.sort_by do |device|
-      [Gem::Version.new(device["version"]), device["model"]]
+    # Return "latest" simulators id
+    device_id = iphone_simulators.sort_by do |iphone|
+      [Gem::Version.new(iphone["version"]), iphone["model"]]
     end.reverse.first["id"]
+    
     "id=#{device_id}"
   end
 
