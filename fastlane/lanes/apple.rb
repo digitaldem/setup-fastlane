@@ -275,7 +275,7 @@ platform :apple do
     # Select "latest" simulator and return the device id
     device = iphone_simulators.sort_by do |iphone|
       [Gem::Version.new(iphone["version"]), -iphone["model"]]
-    end.first
+    end.last
     UI.message("Testing on #{device["model"]} running iOS #{device["version"]}")
     "id=#{device["id"]}"
   end
