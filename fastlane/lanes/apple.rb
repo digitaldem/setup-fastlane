@@ -251,16 +251,22 @@ platform :apple do
 
   # Helper functions
   def select_iphone_simulator
-    # Get list of available simulators
-    simulators = Actions.sh_no_action("xcrun simctl list devices", log: true)
     ios_versions = []
     iphone_models = []
-
-    simulators.each_line do |line|
-      # Match lines with the iOS version (e.g., "-- iOS 18.0 --")
-      ios_versions << line.split[2] if line =~ /^-- iOS/
-      # Match lines with available iPhone devices (excluding unavailable devices)
-      iphone_models << line.split(" (").first.strip if line =~ /iPhone/ && !line.include?("unavailable")
+    
+    # Get list of available simulators
+    simctl_list = Actions.sh_no_action("xcrun simctl list devices -j", log: true)
+    simulators = JSON.parse(simctl_list)
+    simulators["devices"].each do |runtime, devices|
+      # Parse the version string from the runtime
+      next unless runtime.include?("iOS")
+      ios_versions << runtime.match(/iOS-(\d+(?:\.\d+)*)/)&.captures&.first
+      
+      # Parse the available models for this runtime
+      devices.each do |device|
+        next unless device["name"].include?("iPhone") && device["isAvailable"]
+        iphone_models << device["name"]
+      end
     end
 
     latest_ios = ios_versions.max_by { |os| Gem::Version.new(os) }
