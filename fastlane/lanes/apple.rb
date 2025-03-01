@@ -270,12 +270,12 @@ platform :apple do
       UI.user_error!("Could not find an appropriate simulator.")
     end
     
-    # Return "latest" simulators id
-    device_id = iphone_simulators.sort_by do |iphone|
+    # Select "latest" simulator and return the device id
+    device = iphone_simulators.sort_by do |iphone|
       [Gem::Version.new(iphone["version"]), iphone["model"]]
-    end.reverse.first["id"]
+    end.reverse.first
     
-    "id=#{device_id}"
+    "id=#{device["id"]}"
   end
 
   def convert_results_to_junit(json_string)
