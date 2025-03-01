@@ -259,8 +259,10 @@ platform :apple do
       # Parse the version string from the runtime and process each simulator
       next unless runtime.include?("iOS")
       version = runtime.match(/iOS-(\d+-\d+)/)&.captures&.first&.tr('-', '.')
+      puts version
       simulators.each do |simulator|
         next unless simulator["name"].include?("iPhone") && simulator["isAvailable"]
+        puts simulator["name"]
         iphone_simulators.push({ "id" => simulator["udid"], "model" => simulator["name"], "version" => version })
       end
     end
@@ -272,8 +274,8 @@ platform :apple do
     
     # Select "latest" simulator and return the device id
     device = iphone_simulators.sort_by do |iphone|
-      [Gem::Version.new(iphone["version"]), iphone["model"]]
-    end.reverse.last
+      [Gem::Version.new(iphone["version"]), -iphone["model"]]
+    end.first
     UI.message("Testing on #{device["model"]} running iOS #{device["version"]}")
     "id=#{device["id"]}"
   end
