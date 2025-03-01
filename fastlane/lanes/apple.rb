@@ -252,7 +252,7 @@ platform :apple do
   # Helper functions
   def select_iphone_simulator
     # Get list of available simulators
-    simulators = Actions.sh_no_action("xcrun simctl list devices", log: false)
+    simulators = Actions.sh_no_action("xcrun simctl list devices", log: true)
     ios_versions = []
     iphone_models = []
 
@@ -272,6 +272,7 @@ platform :apple do
     end
 
     # Return "latest" simulator string
+    puts "platform=iOS Simulator,name=#{latest_model},OS=#{latest_ios}"
     "platform=iOS Simulator,name=#{latest_model},OS=#{latest_ios}"
   end
 
