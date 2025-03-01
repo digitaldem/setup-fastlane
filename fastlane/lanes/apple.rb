@@ -251,35 +251,33 @@ platform :apple do
 
   # Helper functions
   def select_iphone_simulator
-    ios_versions = []
-    iphone_models = []
+    devices = []
     
     # Get list of available simulators
-    simctl_list = Actions.sh_no_action("xcrun simctl list devices -j", log: true)
+    simctl_list = Actions.sh_no_action("xcrun simctl list devices -j", log: false)
     simulators = JSON.parse(simctl_list)
     simulators["devices"].each do |runtime, devices|
-      # Parse the version string from the runtime
+      # Parse the version string from the runtime and process each device
       next unless runtime.include?("iOS")
-      ios_versions << runtime.match(/iOS-(\d+(?:\.\d+)*)/)&.captures&.first
-      
-      # Parse the available models for this runtime
+      version = runtime.match(/iOS-(\d+-\d+)/)&.captures&.first&.tr('-', '.')
       devices.each do |device|
         next unless device["name"].include?("iPhone") && device["isAvailable"]
-        iphone_models << device["name"]
+        devices.push({ "id" => device["udid"], "model" => device["name"], version" => version })
       end
     end
 
-    latest_ios = ios_versions.max_by { |os| Gem::Version.new(os) }
-    latest_model = iphone_models.max_by { |model| model.gsub(/[^0-9]/, "").to_i }
-
     # Abort if there is no viable simulator
-    unless latest_ios && latest_model
+    if devices.empty?
       UI.user_error!("Could not find an appropriate simulator.")
     end
 
-    # Return "latest" simulator string
-    puts "platform=iOS Simulator,name=#{latest_model},OS=#{latest_ios}"
-    "platform=iOS Simulator,name=#{latest_model},OS=#{latest_ios}"
+    puts devices
+    
+    # Return "latest" simulator id
+    device_id = devices.sort_by do |device|
+      [Gem::Version.new(device["version"]), device["model"]]
+    end.reverse.first["id"]
+    "id=#{device_id}"
   end
 
   def convert_results_to_junit(json_string)
