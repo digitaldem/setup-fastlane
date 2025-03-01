@@ -143,10 +143,13 @@ lane :initial_provisioning do |options|
 end
 
 desc "Import keystores, certificates and provisioning profiles"
-lane :import_signingassets do
-  android = true
-  apple = ["ios", "macos", "catalyst", "tvos"]
-
+lane :import_signingassets do |options|
+  android = options[:android] ? true : false
+  apple = []
+  apple.push("ios") if options[:ios]
+  apple.push("macos", "catalyst") if options[:macos]
+  apple.push("tvos") if options[:tvos]
+  
   # Clean the signing assets repo
   if Dir.exist?($signing_assets_path)
     FileUtils.rm_rf(Dir.glob("#{$signing_assets_path}/*", File::FNM_DOTMATCH))
