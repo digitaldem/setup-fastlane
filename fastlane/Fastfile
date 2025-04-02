@@ -139,7 +139,7 @@ lane :initial_provisioning do |options|
         match(
           keychain_name: ENV["KEYCHAIN"],
           keychain_password: ENV["MATCH_PASSWORD"],
-          git_url: $signing_assets_path,
+          git_url: "file://#{$signing_assets_path}",
           app_identifier: ENV["APP_IDENTIFIER"],
           api_key: apple_app_store_key,
           platform: platform,
