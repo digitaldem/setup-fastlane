@@ -79,37 +79,47 @@ lane :initial_provisioning do |options|
       if File.exist?("#{$signing_assets_path}/#{google_keystore}")
         decrypt("#{$signing_assets_path}/#{google_keystore}")
       end
+      
       keytool(
-        command: "genkeypair",
+        command: "list",
         keystore_path: "#{$signing_assets_path}/#{google_keystore}",
         keystore_password: ENV["MATCH_PASSWORD"],
-        key_alias: ENV["APP_IDENTIFIER"],
-        key_algorithm: "RSA",
-        key_size: 2048,
-        validity: 10000,
-        dname: "CN=#{id_segments.pop}, O=#{id_segments.pop}, OU=#{id_segments.pop}, L=City, S=State, C=US",
         verbose: true
       )
-      keytool(
-        command: "exportcert",
-        keystore_path: "#{$signing_assets_path}/#{google_keystore}",
-        keystore_password: ENV["MATCH_PASSWORD"],
-        key_alias: ENV["APP_IDENTIFIER"],
-        file: "#{$signing_assets_path}/#{google_cert}",
-        rfc: true,
-      )
+      unless Actions.lane_context[Fastlane::Actions::SharedValues::KEYTOOL_OUTPUT].include?(ENV["APP_IDENTIFIER"])
+        keytool(
+          command: "genkeypair",
+          keystore_path: "#{$signing_assets_path}/#{google_keystore}",
+          keystore_password: ENV["MATCH_PASSWORD"],
+          key_alias: ENV["APP_IDENTIFIER"],
+          key_algorithm: "RSA",
+          key_size: 2048,
+          validity: 10000,
+          dname: "CN=#{id_segments.pop}, O=#{id_segments.pop}, OU=#{id_segments.pop}, L=City, S=State, C=US",
+          verbose: true
+        )
+        keytool(
+          command: "exportcert",
+          keystore_path: "#{$signing_assets_path}/#{google_keystore}",
+          keystore_password: ENV["MATCH_PASSWORD"],
+          key_alias: ENV["APP_IDENTIFIER"],
+          file: "#{$signing_assets_path}/#{google_cert}",
+          rfc: true,
+        )
       
-      encrypt("#{$signing_assets_path}/#{google_keystore}")
-      repo.add(google_keystore)
+        encrypt("#{$signing_assets_path}/#{google_keystore}")
+        repo.add(google_keystore)
       
-      encrypt("#{$signing_assets_path}/#{google_cert}")
-      repo.add(google_cert)
+        encrypt("#{$signing_assets_path}/#{google_cert}")
+        repo.add(google_cert)
       
-      repo.commit("[fastlane] Updated keystore and certificate android")
-      repo.push
-      repo.checkout("tmp")
+        repo.commit("[fastlane] Updated keystore and certificate android")
+        repo.push
+      end
     end
 
+    repo.checkout("tmp")
+    
     if apple.any?
       # Reset the build keychain
       if File.exist?("#{$keychains_path}/#{ENV["KEYCHAIN"]}-db")
