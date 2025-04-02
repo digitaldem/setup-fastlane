@@ -118,7 +118,6 @@ lane :initial_provisioning do |options|
       end
     end
 
-    repo.checkout(repo.log.first.sha)
     
     if apple.any?
       # Reset the build keychain
