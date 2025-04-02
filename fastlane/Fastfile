@@ -90,7 +90,6 @@ lane :initial_provisioning do |options|
         dname: "CN=#{id_segments.pop}, O=#{id_segments.pop}, OU=#{id_segments.pop}, L=City, S=State, C=US",
         verbose: true
       )
-      encrypt("#{$signing_assets_path}/#{google_keystore}")
       keytool(
         command: "exportcert",
         keystore_path: "#{$signing_assets_path}/#{google_keystore}",
@@ -99,9 +98,13 @@ lane :initial_provisioning do |options|
         file: "#{$signing_assets_path}/#{google_cert}",
         rfc: true,
       )
-      encrypt("#{$signing_assets_path}/#{google_cert}")
+      
+      encrypt("#{$signing_assets_path}/#{google_keystore}")
       repo.add(google_keystore)
+      
+      encrypt("#{$signing_assets_path}/#{google_cert}")
       repo.add(google_cert)
+      
       repo.commit("[fastlane] Updated keystore and certificate android")
       repo.push
     end
