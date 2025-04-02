@@ -107,6 +107,7 @@ lane :initial_provisioning do |options|
       
       repo.commit("[fastlane] Updated keystore and certificate android")
       repo.push
+      repo.checkout("tmp")
     end
 
     if apple.any?
