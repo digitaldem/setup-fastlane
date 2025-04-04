@@ -49,13 +49,12 @@ platform :flutter do
 
     # Increment version patch number
     version = increment_version_patch()
-    Actions.lane_context[:VERSION] = version
 
     Dir.chdir("..") do
       # Run flutter build to create release artifact for each platform
       if ios
         begin
-          _build_ios
+          _build_ios(version: version)
         rescue StandardError => e
           UI.error("iOS build failed: #{e}")
           build_failures.push("iOS")
@@ -64,7 +63,7 @@ platform :flutter do
 
       if android
         begin
-          _build_android
+          _build_android(version: version)
         rescue StandardError => e
           UI.error("Android build failed: #{e}")
           build_failures.push("Android")
@@ -73,7 +72,7 @@ platform :flutter do
 
       if web
         begin
-          _build_web
+          _build_web(version: version)
         rescue StandardError => e
           UI.error("Web build failed: #{e}")
           build_failures.push("Web")
@@ -93,10 +92,13 @@ platform :flutter do
     web = options[:web] ? true : false
     upload_failures = []
 
+    # Increment version patch number
+    version = increment_version_patch()
+
     Dir.chdir("..") do
       if ios
         begin
-          _upload_ios
+          _upload_ios(version: version)
         rescue StandardError => e
           UI.error("iOS upload failed: #{e}")
           upload_failures.push("iOS")
@@ -105,7 +107,7 @@ platform :flutter do
 
       if android
         begin
-          _upload_android
+          _upload_android(version: version)
         rescue StandardError => e
           UI.error("Android upload failed: #{e}")
           upload_failures.push("Android")
@@ -114,7 +116,7 @@ platform :flutter do
 
       if web
         begin
-          _upload_web
+          _upload_web(version: version)
         rescue StandardError => e
           UI.error("Web upload failed: #{e}")
           upload_failures.push("Web")
@@ -129,14 +131,17 @@ platform :flutter do
 
   # Private lanes
   desc "Build iOS app"
-  lane :_build_ios do
+  lane :_build_ios do |options|
+    version = options[:version] || "0.0.0"
+
     # Build iOS ipa
-    version = Actions.lane_context[:VERSION] || "0.0.0"
     flutter_build("ipa", version, { "export-options-plist" => "./ios/ExportOptions.plist" })
   end
 
   desc "Upload iOS app"
-  lane :_upload_ios do
+  lane :_upload_ios do |options|
+    version = options[:version] || "0.0.0"
+
     # Upload iOS ipa
     ipa = Dir.glob(File.join("./build/ios/ipa", "*.ipa")).max_by { |f| File.mtime(f) }&.then { |f| File.expand_path(f) }
     upload_to_testflight(
@@ -149,14 +154,17 @@ platform :flutter do
   end
 
   desc "Build Android app"
-  lane :_build_android do
+  lane :_build_android do |options|
+    version = options[:version] || "0.0.0"
+
     # Build Android app bundle
-    version = Actions.lane_context[:VERSION] || "0.0.0"
     flutter_build("appbundle", version, nil)
   end
 
   desc "Upload Android app"
-  lane :_upload_android do
+  lane :_upload_android do |options|
+    version = options[:version] || "0.0.0"
+
     # Upload Android aab
     aab = Dir.glob(File.join("./build/app/outputs/bundle/release", "*.aab")).max_by { |f| File.mtime(f) }&.then { |f| File.expand_path(f) }
     Tempfile.open(["temp", ".json"]) do |tempfile|
@@ -165,22 +173,27 @@ platform :flutter do
       supply(
         json_key: tempfile.path,
         aab: aab,
+        mapping: "./build/app/outputs/mapping/release/mapping.txt",
         package_name: ENV["APP_IDENTIFIER"],
+        version_name: version,
         track: "internal",
-        release_status: "draft"
+        release_status: "inProgress",
       )
     end
   end
 
   desc "Build Web app"
-  lane :_build_web do
-    # Biuld web app
-    version = Actions.lane_context[:VERSION] || "0.0.0"
+  lane :_build_web do |options|
+    version = options[:version] || "0.0.0"
+
+    # Build web app
     flutter_build("web", version, nil)
   end
 
   desc "Upload Web app"
-  lane :_upload_web do
+  lane :_upload_web do |options|
+    version = options[:version] || "0.0.0"
+
     # Upload web app
     #TODO
   end
