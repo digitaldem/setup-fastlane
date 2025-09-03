@@ -150,9 +150,9 @@ lane :initial_provisioning do |options|
           api_key: apple_app_store_key,
           platform: platform,
           type: "appstore",
-          additional_cert_types: "mac_installer_distribution",
+          additional_cert_types: (platform == "macos" ? ["mac_installer_distribution"] : []),
+          include_mac_in_profiles: (platform == "ios" && apple.include?("macos")),
           generate_apple_certs: true,
-          include_mac_in_profiles: true,
           readonly: false,
           force: true,
           verbose: true
