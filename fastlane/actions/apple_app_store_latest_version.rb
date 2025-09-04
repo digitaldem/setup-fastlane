@@ -21,7 +21,8 @@ module Fastlane
               api_key: api_key,
               app_identifier: ENV["APP_IDENTIFIER"],
               live: false,
-              platform: platform
+              platform: platform,
+              initial_build_number: "0.0.0"
             )
             version = lane_context[SharedValues::LATEST_VERSION]
             versions.add(Gem::Version.new(version))
