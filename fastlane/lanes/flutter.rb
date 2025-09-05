@@ -181,7 +181,7 @@ platform :flutter do
       supply(
         json_key: tempfile.path,
         aab: aab,
-        mapping: File.join("./build/app/outputs/mapping/release", "mapping.txt"),
+        mapping: File.expand_path(File.join("./build/app/outputs/mapping/release", "mapping.txt")),
         package_name: ENV["APP_IDENTIFIER"],
         version_name: version,
         track: "internal",
