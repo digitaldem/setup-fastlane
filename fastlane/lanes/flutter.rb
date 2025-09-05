@@ -164,6 +164,7 @@ platform :flutter do
   desc "Upload Android app"
   lane :_upload_android do |options|
     version = options[:version] || "0.0.0"
+    number = version.split(".").map { |part| part.rjust(2, "0") }.join.to_i
 
     # Upload Android aab
     aab = Dir.glob(File.join("./build/app/outputs/bundle/release", "*.aab")).max_by { |f| File.mtime(f) }&.then { |f| File.expand_path(f) }
@@ -175,7 +176,7 @@ platform :flutter do
         aab: aab,
         mapping: File.expand_path("build/app/outputs/mapping/release/mapping.txt", Dir.pwd),
         package_name: ENV["APP_IDENTIFIER"],
-        version_name: version,
+        version_name: "#{number} (#{version})",
         track: "internal",
         release_status: "draft",
       )
