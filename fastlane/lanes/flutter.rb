@@ -177,7 +177,7 @@ platform :flutter do
         package_name: ENV["APP_IDENTIFIER"],
         version_name: version,
         track: "internal",
-        release_status: "completed",
+        release_status: "draft",
       )
     end
   end
