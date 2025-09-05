@@ -166,14 +166,6 @@ platform :flutter do
     version = options[:version] || "0.0.0"
 
     # Upload Android aab
-    sh("pwd")
-    sh("ls ./build")
-    sh("ls ./build/app")
-    sh("ls ./build/app/outputs")
-    sh("ls ./build/app/outputs/bundle")
-    sh("ls ./build/app/outputs/bundle/release")
-    sh("ls ./build/app/outputs/mapping")
-    sh("ls ./build/app/outputs/mapping/release")
     aab = Dir.glob(File.join("./build/app/outputs/bundle/release", "*.aab")).max_by { |f| File.mtime(f) }&.then { |f| File.expand_path(f) }
     Tempfile.open(["temp", ".json"]) do |tempfile|
       tempfile.write(get_google_play_store_key().to_json())
@@ -181,7 +173,7 @@ platform :flutter do
       supply(
         json_key: tempfile.path,
         aab: aab,
-        mapping: File.expand_path(File.join("./build/app/outputs/mapping/release", "mapping.txt")),
+        mapping: File.expand_path("build/app/outputs/mapping/release/mapping.txt", Dir.pwd),
         package_name: ENV["APP_IDENTIFIER"],
         version_name: version,
         track: "internal",
