@@ -51,6 +51,8 @@ module Fastlane
         unless latest_version
           UI.important("No versions found in the #{track} track for #{app_identifier}")
           latest_version = Gem::Version.new("0.0.0")
+        else
+          UI.message("Latest upload on android platform is version #{latest_version}")
         end
         
         # Set the lane's shared value result
