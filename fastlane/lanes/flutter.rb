@@ -163,7 +163,7 @@ platform :flutter do
     number = options[:number] || 1
 
     # Build Android app bundle
-    flutter_build("appbundle", version, nil)
+    flutter_build("appbundle", version, number, nil)
   end
 
   desc "Upload Android app"
