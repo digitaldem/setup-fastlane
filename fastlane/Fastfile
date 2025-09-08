@@ -303,12 +303,12 @@ def increment_version_patch()
   google_version = lane_context[Fastlane::Actions::SharedValues::GOOGLE_PLAY_STORE_LATEST_VERSION]
 
   # Check the latest version string on the web
-  web_latest_version(
-    api_key: "",
-    app_identifier: ENV["APP_IDENTIFIER"],
-    live: false
-  )
-  web_version = lane_context[Fastlane::Actions::SharedValues::WEB_LATEST_VERSION]
+  # web_latest_version(
+  #   api_key: "",
+  #   app_identifier: ENV["APP_IDENTIFIER"],
+  #   live: false
+  # )
+  web_version = "0.0.0"  # lane_context[Fastlane::Actions::SharedValues::WEB_LATEST_VERSION]
 
   # Select the highest existing version number
   latest_version = [
