@@ -181,7 +181,7 @@ platform :flutter do
         aab: aab,
         mapping: File.expand_path("build/app/outputs/mapping/release/mapping.txt", Dir.pwd),
         package_name: ENV["APP_IDENTIFIER"],
-        version_name: "#{version} (#{number})",
+        version_name: "Version #{version} (#{number})",
         track: "internal",
         release_status: "draft",
       )
