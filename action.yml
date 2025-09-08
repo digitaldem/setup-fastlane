@@ -9,7 +9,7 @@ inputs:
   working-directory: 
     description: The working directory of the calling repository
     required: false
-    default: ./
+    default: .
 
 runs:
   using: composite
@@ -28,6 +28,6 @@ runs:
 
     - name: Copy the Fastfile and any custom actions
       run: |
-        mkdir -p ${{ inputs.working-directory }}fastlane
-        rsync -av --delete $GITHUB_ACTION_PATH/fastlane/ ${{ inputs.working-directory }}fastlane/
+        mkdir -p ${{ inputs.working-directory }}/fastlane
+        rsync -av --delete $GITHUB_ACTION_PATH/fastlane/ ${{ inputs.working-directory }}/fastlane/
       shell: bash
