@@ -22,12 +22,10 @@ runs:
 
     - name: Install Fastlane and other dependencies
       run: |
-        bundle config set path 'vendor/bundle'
-        bundle install --gemfile=$GITHUB_ACTION_PATH/Gemfile
-      shell: bash
-
-    - name: Copy the Fastfile and any custom actions
-      run: |
+        pwd
         mkdir -p ${{ inputs.working-directory }}/fastlane
-        rsync -av --delete $GITHUB_ACTION_PATH/fastlane/ ${{ inputs.working-directory }}/fastlane/
+        cp $GITHUB_ACTION_PATH/Gemfile ${{ inputs.working-directory }}/Gemfile
+        rsync -av --delete $GITHUB_ACTION_PATH/fastlane/ ${{ inputs.working-directory }}/fastlane
+        bundle config set path 'vendor/bundle'
+        bundle install
       shell: bash
