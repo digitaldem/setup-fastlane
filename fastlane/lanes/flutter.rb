@@ -49,12 +49,13 @@ platform :flutter do
 
     # Increment version patch number
     version = increment_version_patch()
+    number = version.split(".").map { |segment| segment.rjust(3, "0") }.join.to_i
 
     Dir.chdir("..") do
       # Run flutter build to create release artifact for each platform
       if ios
         begin
-          _build_ios(version: version)
+          _build_ios(version: version, number: number)
         rescue StandardError => e
           UI.error("iOS build failed: #{e}")
           build_failures.push("iOS")
@@ -63,7 +64,7 @@ platform :flutter do
 
       if android
         begin
-          _build_android(version: version)
+          _build_android(version: version, number: number)
         rescue StandardError => e
           UI.error("Android build failed: #{e}")
           build_failures.push("Android")
@@ -72,7 +73,7 @@ platform :flutter do
 
       if web
         begin
-          _build_web(version: version)
+          _build_web(version: version, number: number)
         rescue StandardError => e
           UI.error("Web build failed: #{e}")
           build_failures.push("Web")
@@ -94,11 +95,12 @@ platform :flutter do
 
     # Increment version patch number
     version = increment_version_patch()
+    number = version.split(".").map { |segment| segment.rjust(3, "0") }.join.to_i
 
     Dir.chdir("..") do
       if ios
         begin
-          _upload_ios(version: version)
+          _upload_ios(version: version, number: number)
         rescue StandardError => e
           UI.error("iOS upload failed: #{e}")
           upload_failures.push("iOS")
@@ -107,7 +109,7 @@ platform :flutter do
 
       if android
         begin
-          _upload_android(version: version)
+          _upload_android(version: version, number: number)
         rescue StandardError => e
           UI.error("Android upload failed: #{e}")
           upload_failures.push("Android")
@@ -116,7 +118,7 @@ platform :flutter do
 
       if web
         begin
-          _upload_web(version: version)
+          _upload_web(version: version, number: number)
         rescue StandardError => e
           UI.error("Web upload failed: #{e}")
           upload_failures.push("Web")
@@ -132,15 +134,17 @@ platform :flutter do
   # Private lanes
   desc "Build iOS app"
   lane :_build_ios do |options|
-    version = options[:version] || "0.0.0"
-
+    version = options[:version] || "0.0.1"
+    number = 1  #options[:number] || 1
+    
     # Build iOS ipa
-    flutter_build("ipa", version, { "export-options-plist" => "./ios/ExportOptions.plist" })
+    flutter_build("ipa", version, number, { "export-options-plist" => "./ios/ExportOptions.plist" })
   end
 
   desc "Upload iOS app"
   lane :_upload_ios do |options|
-    version = options[:version] || "0.0.0"
+    version = options[:version] || "0.0.1"
+    number = 1  #options[:number] || 1
 
     # Upload iOS ipa
     ipa = Dir.glob(File.join("./build/ios/ipa", "*.ipa")).max_by { |f| File.mtime(f) }&.then { |f| File.expand_path(f) }
@@ -155,7 +159,8 @@ platform :flutter do
 
   desc "Build Android app"
   lane :_build_android do |options|
-    version = options[:version] || "0.0.0"
+    version = options[:version] || "0.0.1"
+    number = options[:number] || 1
 
     # Build Android app bundle
     flutter_build("appbundle", version, nil)
@@ -163,8 +168,8 @@ platform :flutter do
 
   desc "Upload Android app"
   lane :_upload_android do |options|
-    version = options[:version] || "0.0.0"
-    number = "1"  #version.split(".").map { |part| part.rjust(2, "0") }.join.to_i
+    version = options[:version] || "0.0.1"
+    number = 1  #options[:number] || 1
 
     # Upload Android aab
     aab = Dir.glob(File.join("./build/app/outputs/bundle/release", "*.aab")).max_by { |f| File.mtime(f) }&.then { |f| File.expand_path(f) }
@@ -185,25 +190,26 @@ platform :flutter do
 
   desc "Build Web app"
   lane :_build_web do |options|
-    version = options[:version] || "0.0.0"
+    version = options[:version] || "0.0.1"
+    number = 1  #options[:number] || 1
 
     # Build web app
-    flutter_build("web", version, nil)
+    flutter_build("web", version, number, nil)
   end
 
   desc "Upload Web app"
   lane :_upload_web do |options|
-    version = options[:version] || "0.0.0"
+    version = options[:version] || "0.0.1"
+    number = 1  #options[:number] || 1
 
     # Upload web app
     #TODO
   end
 
   # Helper functions
-  def flutter_build(artifact, version, options)
-    build_number = "1"  #version.split(".").map { |segment| segment.rjust(3, "0") }.join.to_i
+  def flutter_build(artifact, version, number, options)
     additional_args = options&.map { |key, value| "--#{key} #{value}" }&.join(" ") || ""
-    result = execute_command("flutter build #{artifact} --release --build-name #{version} --build-number #{build_number} #{additional_args}")
+    result = execute_command("flutter build #{artifact} --release --build-name #{version} --build-number #{number} #{additional_args}")
   end
 
 end
