@@ -20,12 +20,15 @@ runs:
         ruby-version: ${{ inputs.ruby-version }}
         bundler-cache: true
 
-    - name: Install Fastlane and other dependencies
+    - name: Install Fastlane and other Gem dependencies
       run: |
-        pwd
-        mkdir -p ${{ inputs.working-directory }}/fastlane
         cp $GITHUB_ACTION_PATH/Gemfile ${{ inputs.working-directory }}/Gemfile
-        rsync -av --delete $GITHUB_ACTION_PATH/fastlane/ ${{ inputs.working-directory }}/fastlane
         bundle config set path 'vendor/bundle'
-        bundle install
+        bundle install --gemfile ${{ inputs.working-directory }}/Gemfile
+      shell: bash
+
+    - name: Copy the Fastfile and custom lanes and actions
+      run: |      
+        mkdir -p ${{ inputs.working-directory }}/fastlane
+        rsync -av --delete $GITHUB_ACTION_PATH/fastlane/ ${{ inputs.working-directory }}/fastlane
       shell: bash
