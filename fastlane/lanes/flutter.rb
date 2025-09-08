@@ -201,7 +201,7 @@ platform :flutter do
 
   # Helper functions
   def flutter_build(artifact, version, options)
-    build_number = version.split(".").map { |segment| segment.rjust(3, "0") }.join.to_i
+    build_number = "1"  #version.split(".").map { |segment| segment.rjust(3, "0") }.join.to_i
     additional_args = options&.map { |key, value| "--#{key} #{value}" }&.join(" ") || ""
     result = execute_command("flutter build #{artifact} --release --build-name #{version} --build-number #{build_number} #{additional_args}")
   end
