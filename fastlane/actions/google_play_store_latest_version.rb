@@ -49,10 +49,10 @@ module Fastlane
         # Select the highest version found
         latest_version = versions.max
         unless latest_version
-          UI.important("No versions found in the #{track} track for #{app_identifier}")
+          UI.important("Could not find a build for any version on android platform on Google Play Store")
           latest_version = Gem::Version.new("0.0.0")
         else
-          UI.message("Latest upload on android platform is version #{latest_version}")
+          UI.message("Latest upload for version #{latest_version} on android platform is build: 1")
         end
         
         # Set the lane's shared value result
