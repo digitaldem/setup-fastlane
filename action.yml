@@ -3,12 +3,16 @@ description: Sets up Ruby, installs Bundler, and provides a Fastfile.
 author: DigitalDementia
 inputs:
   ruby-version:
-    description: 'Ruby version to use'
+    description: Ruby version to use
     required: false
-    default: '3.3'
+    default: 3.3
+  working-directory: 
+    description: The working directory of the calling repository
+    required: false
+    default: ./
 
 runs:
-  using: 'composite'
+  using: composite
   steps:
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
@@ -24,6 +28,6 @@ runs:
 
     - name: Copy the Fastfile and any custom actions
       run: |
-        mkdir -p ./fastlane
-        rsync -av --delete $GITHUB_ACTION_PATH/fastlane/ ./fastlane/
+        mkdir -p ${{ inputs.working-directory }}fastlane
+        rsync -av --delete $GITHUB_ACTION_PATH/fastlane/ ${{ inputs.working-directory }}fastlane/
       shell: bash
