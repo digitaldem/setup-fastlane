@@ -67,7 +67,7 @@ lane :initial_provisioning do |options|
 
     ENV["GIT_SSH_COMMAND"] = "ssh -i #{file.path} -o IdentitiesOnly=yes"
     git_user = ENV["GIT_USER"].split(":")
-    
+
     if android
       # Clone the signing assets repo
       repo = Git.clone(ENV["KEYS_GIT_URL"], $signing_assets_path)
@@ -81,7 +81,7 @@ lane :initial_provisioning do |options|
       if File.exist?("#{$signing_assets_path}/#{google_keystore}")
         decrypt("#{$signing_assets_path}/#{google_keystore}")
       end
-      
+
       # Ensure the app identifier does not already exist
       keytool(
         command: "list",
@@ -109,21 +109,21 @@ lane :initial_provisioning do |options|
           file: "#{$signing_assets_path}/#{google_cert}",
           rfc: true,
         )
-      
+
         # Re-encrypt
         encrypt("#{$signing_assets_path}/#{google_keystore}")
         repo.add(google_keystore)
-      
+
         encrypt("#{$signing_assets_path}/#{google_cert}")
         repo.add(google_cert)
-      
+
         # Push updated files
         repo.commit("[fastlane] Updated keystore and certificate android")
         repo.push
       end
     end
 
-    
+
     if apple.any?
       # Reset the build keychain
       if File.exist?("#{$keychains_path}/#{ENV["KEYCHAIN"]}-db")
@@ -169,7 +169,7 @@ lane :import_signingassets do |options|
   apple.push("ios") if options[:ios]
   apple.push("macos", "catalyst") if options[:macos]
   apple.push("tvos") if options[:tvos]
-  
+
   # Clean the signing assets repo
   if Dir.exist?($signing_assets_path)
     FileUtils.rm_rf(Dir.glob("#{$signing_assets_path}/*", File::FNM_DOTMATCH))
@@ -285,7 +285,21 @@ def get_google_play_store_key()
   JSON.parse(key)
 end
 
-def increment_version_patch()
+def get_minimum_version()
+  latest_version = get_latest_version()
+
+  # Increment the version patch segment
+  version_segments = latest_version.segments
+  while version_segments.length < 3
+    version_segments << 0
+  end
+  version_segments[2] += 1
+  minimum_version = version_segments.join(".")
+  UI.success("Setting the new version as #{minimum_version}")
+  minimum_version
+end
+
+def get_latest_version()
   # Check the latest version string in Test Flight
   apple_app_store_latest_version(
     api_key: get_apple_app_store_key(),
@@ -316,14 +330,5 @@ def increment_version_patch()
     Gem::Version.new(google_version),
     Gem::Version.new(web_version)].max
   puts "Found version #{latest_version}"
-
-  # Increment the version patch segment
-  version_segments = latest_version.segments
-  while version_segments.length < 3
-    version_segments << 0
-  end
-  version_segments[2] += 1
-  new_version = version_segments.join(".")
-  UI.success("Setting the new version as #{new_version}")
-  new_version
+  latest_version
 end
