@@ -49,7 +49,7 @@ platform :flutter do
     # Set an appropriate version number
     specified_version = options[:version] || "0.0.1"
     minimum_version = get_minimum_version()
-    version = [Gem::Version.new(specified_version), Gem::Version.new(minimum_version].max
+    version = [Gem::Version.new(specified_version), Gem::Version.new(minimum_version)].max
     number = version.segments.map { |segment| segment.to_s.rjust(3, "0") }.join.to_i
 
     build_failures = []
@@ -97,7 +97,7 @@ platform :flutter do
     # Set an appropriate version number
     specified_version = options[:version] || "0.0.1"
     minimum_version = get_minimum_version()
-    version = [Gem::Version.new(specified_version), Gem::Version.new(minimum_version].max
+    version = [Gem::Version.new(specified_version), Gem::Version.new(minimum_version)].max
     number = version.segments.map { |segment| segment.to_s.rjust(3, "0") }.join
 
     upload_failures = []
