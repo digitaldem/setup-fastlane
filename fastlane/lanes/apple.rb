@@ -41,6 +41,7 @@ platform :apple do
     ios = options[:ios] ? true : false
     macos = options[:macos] ? true : false
     tvos = options[:tvos] ? true : false
+    specified_version = options[:version] || "0.0.1"
     build_failures = []
 
     # Ensure plist has ITSAppUsesNonExemptEncryption declaration
@@ -52,11 +53,13 @@ platform :apple do
     )
 
     # Increment version patch number and update xcodeproj MARKETING_VERSION
-    new_version = increment_version_patch()
+    minimum_version = get_minimum_version()
+    version = [Gem::Version.new(specified_version), Gem::Version.new(minimum_version)].max
+    
     xcodeproj = Xcodeproj::Project.open("../#{ENV["PROJECT"]}")
     xcodeproj.targets.each do |target|
       target.build_configurations.each do |config|
-        config.build_settings["MARKETING_VERSION"] = new_version
+        config.build_settings["MARKETING_VERSION"] = version
       end
     end
     xcodeproj.save
