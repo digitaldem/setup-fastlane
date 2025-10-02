@@ -285,6 +285,7 @@ platform :apple do
         end
       [Gem::Version.new(iphone["version"]), model]
     end.last
+    Actions.sh_no_action("xcrun simctl boot #{device["id"]}", log: true)
     UI.message("Testing on #{device["model"]} running iOS #{device["version"]}")
     "id=#{device["id"]}"
   end
