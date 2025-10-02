@@ -285,8 +285,15 @@ platform :apple do
         end
       [Gem::Version.new(iphone["version"]), model]
     end.last
-    Actions.sh_no_action("xcrun simctl boot #{device["id"]}", log: true)
     UI.message("Testing on #{device["model"]} running iOS #{device["version"]}")
+
+    Actions.sh_no_action("xcrun simctl boot #{device["id"]}", log: true)
+    60.times do |i|
+      if Actions.sh_no_action("xcrun simctl list devices | grep '#{device["id"]}' | grep 'Booted'", log: false).include?("Booted")
+        break
+      end
+      sleep(1)
+    end
     "id=#{device["id"]}"
   end
 
