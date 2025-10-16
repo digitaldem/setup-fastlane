@@ -141,6 +141,11 @@ platform :flutter do
     version = options[:version]
     number = options[:number]
 
+    # Explciit pod install
+    Dir.chdir("ios") do
+      execute_command("pod install")
+    end
+
     # Build iOS ipa
     flutter_build("ipa", version, number, { "export-options-plist" => "./ios/ExportOptions.plist" })
   end
