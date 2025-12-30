@@ -152,6 +152,7 @@ lane :initial_provisioning do |options|
           type: "development",
           include_mac_in_profiles: true,
           generate_apple_certs: true,
+          force_for_new_devices: true,
           readonly: false,
           force: true,
           verbose: true
