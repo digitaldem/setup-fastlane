@@ -149,6 +149,22 @@ lane :initial_provisioning do |options|
           app_identifier: ENV["APP_IDENTIFIER"],
           api_key: apple_app_store_key,
           platform: platform,
+          type: "development",
+          include_mac_in_profiles: true,
+          generate_apple_certs: true,
+          readonly: false,
+          force: true,
+          verbose: true
+        )
+        match(
+          keychain_name: ENV["KEYCHAIN"],
+          keychain_password: ENV["MATCH_PASSWORD"],
+          git_url: ENV["KEYS_GIT_URL"],
+          git_full_name: git_user[0],
+          git_user_email: git_user[1],
+          app_identifier: ENV["APP_IDENTIFIER"],
+          api_key: apple_app_store_key,
+          platform: platform,
           type: "appstore",
           additional_cert_types: "mac_installer_distribution",
           include_mac_in_profiles: true,
@@ -217,6 +233,20 @@ lane :import_signingassets do |options|
       apple_app_store_key = get_apple_app_store_key()
       apple.each do |platform|
         begin
+          match(
+            keychain_name: ENV["KEYCHAIN"],
+            keychain_password: ENV["MATCH_PASSWORD"],
+            git_url: $signing_assets_path,
+            app_identifier: ENV["APP_IDENTIFIER"],
+            api_key: apple_app_store_key,
+            platform: platform,
+            type: "development",
+            generate_apple_certs: true,
+            include_mac_in_profiles: true,
+            readonly: true,
+            force: false,
+            verbose: false
+          )
           match(
             keychain_name: ENV["KEYCHAIN"],
             keychain_password: ENV["MATCH_PASSWORD"],
