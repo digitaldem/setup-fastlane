@@ -145,10 +145,10 @@ platform :apple do
   desc "Build iOS app"
   lane :_build_ios do
     # Output setup
-    archive_dir = File.expand_path("../builds/iOS", __dir__)
+    archive_dir = File.expand_path("../../builds/iOS", __dir__)
     FileUtils.mkdir_p(archive_dir) 
     UI.message("iOS archiving created at: #{archive_dir.inspect}")
-    export_dir = File.expand_path("../builds/iOS/export", __dir__) 
+    export_dir = File.expand_path("../../builds/iOS/export", __dir__) 
     FileUtils.mkdir_p(export_dir) 
     UI.message("iOS exporting at: #{export_dir}") 
 
@@ -162,8 +162,8 @@ platform :apple do
       catalyst_platform: "ios",
       clean: true,
       skip_package_ipa: true,      
-      output_directory: archive_dir,
-      output_name: "#{ENV["SCHEME"]}",
+      build_path: archive_dir,
+      #output_name: "#{ENV["SCHEME"]}",
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' IPHONEOS_DEPLOYMENT_TARGET=17.0"
     )
     
@@ -191,7 +191,7 @@ platform :apple do
     # Upload iOS ipa
     upload_to_testflight(
       api_key: get_apple_app_store_key,
-      ipa: File.expand_path("../builds/iOS/export/#{ENV["SCHEME"]}.ipa", __dir__),
+      ipa: File.expand_path("../../builds/iOS/export/#{ENV["SCHEME"]}.ipa", __dir__),
       app_platform: "ios",
       changelog: $changelog,
       notify_external_testers: false
@@ -201,10 +201,10 @@ platform :apple do
   desc "Build macOS app"
   lane :_build_macos do
     # Output setup
-    archive_dir = File.expand_path("../builds/macOS", __dir__)
+    archive_dir = File.expand_path("../../builds/macOS", __dir__)
     FileUtils.mkdir_p(archive_dir) 
     UI.message("macOS archiving created at: #{archive_dir.inspect}")
-    export_dir = File.expand_path("../builds/macOS/export", __dir__) 
+    export_dir = File.expand_path("../../builds/macOS/export", __dir__) 
     FileUtils.mkdir_p(export_dir) 
     UI.message("macOS exporting at: #{export_dir}") 
     
@@ -219,8 +219,8 @@ platform :apple do
       #catalyst_platform: "macos",
       clean: true,
       skip_package_ipa: true,
-      output_directory: File.expand_path("../builds/macOS", __dir__),
-      output_name: "#{ENV["SCHEME"]}",
+      build_path: archive_dir,
+      #output_name: "#{ENV["SCHEME"]}",
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=10.15 EFFECTIVE_PLATFORM_NAME=''"
     )
     
@@ -248,7 +248,7 @@ platform :apple do
     # Upload macOS pkg
     upload_to_testflight(
       api_key: get_apple_app_store_key,
-      pkg: File.expand_path("../builds/macOS/export/#{ENV["SCHEME"]}.pkg", __dir__),
+      pkg: File.expand_path("../../builds/macOS/export/#{ENV["SCHEME"]}.pkg", __dir__),
       app_platform: "osx",
       changelog: $changelog,
       notify_external_testers: false
@@ -258,10 +258,10 @@ platform :apple do
   desc "Build tvOS app"
   lane :_build_tvos do
     # Output setup
-    archive_dir = File.expand_path("../builds/tvOS", __dir__)
+    archive_dir = File.expand_path("../../builds/tvOS", __dir__)
     FileUtils.mkdir_p(archive_dir) 
     UI.message("tvOS archiving created at: #{archive_dir.inspect}")
-    export_dir = File.expand_path("../builds/tvOS/export", __dir__) 
+    export_dir = File.expand_path("../../builds/tvOS/export", __dir__) 
     FileUtils.mkdir_p(export_dir) 
     UI.message("tvOS exporting at: #{export_dir}") 
 
@@ -280,8 +280,8 @@ platform :apple do
       destination: "generic/platform=tvOS",
       clean: true,
       skip_package_ipa: true,      
-      output_directory: archive_dir,
-      output_name: "#{ENV["SCHEME"]}",
+      build_path: archive_dir,
+      #output_name: "#{ENV["SCHEME"]}",
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' TVOS_DEPLOYMENT_TARGET=17.0"
     )
 
@@ -314,7 +314,7 @@ platform :apple do
     # Upload tvOS ipa
     upload_to_testflight(
       api_key: get_apple_app_store_key,
-      ipa: File.expand_path("../builds/tvOS/export/#{ENV["SCHEME"]}.ipa", __dir__),
+      ipa: File.expand_path("../../builds/tvOS/export/#{ENV["SCHEME"]}.ipa", __dir__),
       app_platform: "appletvos",
       changelog: $changelog,
       notify_external_testers: false
