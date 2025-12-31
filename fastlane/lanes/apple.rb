@@ -147,7 +147,7 @@ platform :apple do
     # Output setup
     build_dir = File.expand_path("../../builds/iOS", __dir__)
     FileUtils.mkdir_p(build_dir) 
-    UI.message("iOS building at: #{build_dir.inspect}")
+    UI.message("Building at: #{build_dir.inspect}")
 
     # XCodeBuild archive
     gym(
@@ -168,7 +168,7 @@ platform :apple do
     UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive 
     UI.crash!("gym returned an invalid XCODEBUILD_ARCHIVE #{archive.inspect}") unless archive.include?("/iOS/")
     UI.crash!("gym returned XCODEBUILD_ARCHIVE #{archive.inspect} but archive does not exist") unless File.exist?(archive)    
-    UI.message("iOS archive created at: #{archive.inspect}") 
+    # UI.message("iOS archive created at: #{archive.inspect}") 
 
     # XCodeBuild export from archive
     with_export_options("match AppStore #{ENV["APP_IDENTIFIER"]}") do |plist|
@@ -177,8 +177,8 @@ platform :apple do
 
     # Validate export
     export = File.join(build_dir, "#{ENV["SCHEME"]}.ipa")
-    UI.crash!("Archive does not exist") unless File.exist?(export)    
-    UI.message("iOS export created at: #{export.inspect}") 
+    UI.crash!("Export artifact does not exist") unless File.exist?(export)    
+    UI.message("IPA created at: #{export.inspect}") 
   end
 
   desc "Upload iOS app to TestFlight"
@@ -198,7 +198,7 @@ platform :apple do
     # Output setup
     build_dir = File.expand_path("../../builds/macOS", __dir__)
     FileUtils.mkdir_p(build_dir) 
-    UI.message("macOS building at: #{build_dir.inspect}")
+    UI.message("Building at: #{build_dir.inspect}")
     
     # XCodeBuild archive
     gym(
@@ -219,7 +219,7 @@ platform :apple do
     UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive 
     UI.crash!("gym returned an invalid XCODEBUILD_ARCHIVE #{archive.inspect}") unless archive.include?("/macOS/")
     UI.crash!("gym returned XCODEBUILD_ARCHIVE #{archive.inspect} but archive does not exist") unless Dir.exist?(archive)
-    UI.message("macOS archive created at: #{archive.inspect}") 
+    # UI.message("macOS archive created at: #{archive.inspect}") 
 
     # XCodeBuild export from archive
     with_export_options("match AppStore #{ENV["APP_IDENTIFIER"]} macos") do |plist|
@@ -228,8 +228,8 @@ platform :apple do
 
     # Validate export
     export = File.join(build_dir, "#{ENV["SCHEME"]}.pkg")
-    UI.crash!("Archive does not exist") unless File.exist?(export)
-    UI.message("iOS export created at: #{export.inspect}")     
+    UI.crash!("Export artifact does not exist") unless File.exist?(export)
+    UI.message("PKG created at: #{export.inspect}")     
   end
 
   desc "Upload macOS app to TestFlight"
@@ -249,7 +249,7 @@ platform :apple do
     # Output setup
     build_dir = File.expand_path("../../builds/tvOS", __dir__)
     FileUtils.mkdir_p(build_dir) 
-    UI.message("tvOS building at: #{build_dir.inspect}")
+    UI.message("Building at: #{build_dir.inspect}")
 
     # XCodeBuild archive
     gym(
@@ -269,7 +269,7 @@ platform :apple do
     UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive 
     UI.crash!("gym returned an invalid XCODEBUILD_ARCHIVE #{archive.inspect}") unless archive.include?("/tvOS/")
     UI.crash!("gym returned XCODEBUILD_ARCHIVE #{archive.inspect} but archive does not exist") unless File.exist?(archive)    
-    UI.message("tvOS archive created at: #{archive.inspect}") 
+    # UI.message("tvOS archive created at: #{archive.inspect}") 
 
     # Export from archive
     with_export_options("match AppStore #{ENV["APP_IDENTIFIER"]} tvos") do |plist|
@@ -278,8 +278,8 @@ platform :apple do
 
     # Validate export
     export = File.join(build_dir, "#{ENV["SCHEME"]}.ipa")
-    UI.crash!("Archive does not exist") unless File.exist?(export)    
-    UI.message("tvOS export created at: #{export.inspect}")     
+    UI.crash!("Export artifact does not exist") unless File.exist?(export)    
+    UI.message("IPA created at: #{export.inspect}")     
   end
 
   desc "Upload tvOS app to TestFlight"
@@ -451,7 +451,7 @@ platform :apple do
   def with_export_options(profile)
     Dir.mktmpdir("export-options") do |dir|
       plist_file = File.join(dir, "exportOptions.plist")
-      Actions.sh_no_action("/usr/libexec/PlistBuddy -c \"Clear dict\" \"#{plist_file}\"")
+      Actions.sh_no_action("/usr/libexec/PlistBuddy -c \"Clear dict\" \"#{plist_file}\"", log: false)
       update_plist(
         plist_path: plist_file,
         block: proc do |plist|
