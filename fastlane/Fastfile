@@ -34,6 +34,7 @@ Fastlane::SupportedPlatforms.extra = [:apple, :flutter]
 if File.exist?(".env")
   Dotenv.load(".env")
 end
+ENV["FASTLANE_SKIP_SUPPORTED_PLATFORMS_CHECK"] = "1"
 
 # Auto generate a changelog message
 $changelog = "Maintenance build generated on #{Time.now.strftime("%a. %b %-d %Y")}"
