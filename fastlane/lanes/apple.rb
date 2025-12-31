@@ -144,6 +144,12 @@ platform :apple do
   # Private lanes
   desc "Build iOS app"
   lane :_build_ios do
+    UI.message("ENV GYM_SKIP_PACKAGE_IPA=#{ENV['GYM_SKIP_PACKAGE_IPA'].inspect}")
+    UI.message("ENV SKIP_PACKAGE_IPA=#{ENV['SKIP_PACKAGE_IPA'].inspect}")
+    UI.message("ENV FASTLANE_SKIP_PACKAGE_IPA=#{ENV['FASTLANE_SKIP_PACKAGE_IPA'].inspect}")
+    UI.message("ENV GYM_SKIP_ARCHIVE=#{ENV['GYM_SKIP_ARCHIVE'].inspect}")
+    UI.message("ENV SKIP_ARCHIVE=#{ENV['SKIP_ARCHIVE'].inspect}")    
+    
     # Perform XCode build
     gym(
       project: ENV["PROJECT"],
@@ -159,12 +165,18 @@ platform :apple do
       clean: true,
       export_method: "app-store",
       export_options: {
+        method: "app-store",
+        signingStyle: "manual",        
         provisioningProfiles: {
           ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]}"
         },
         compileBitcode: true
       }
     )
+    ipa_path = "./builds/iOS/#{ENV['SCHEME']}.ipa"
+    unless File.exist?(ipa_path)
+      UI.crash!("gym finished but IPA was not produced at #{ipa_path}.")
+    end        
   end
 
   desc "Upload iOS app to TestFlight"
@@ -181,6 +193,12 @@ platform :apple do
 
   desc "Build macOS app"
   lane :_build_macos do
+    UI.message("ENV GYM_SKIP_PACKAGE_IPA=#{ENV['GYM_SKIP_PACKAGE_IPA'].inspect}")
+    UI.message("ENV SKIP_PACKAGE_IPA=#{ENV['SKIP_PACKAGE_IPA'].inspect}")
+    UI.message("ENV FASTLANE_SKIP_PACKAGE_IPA=#{ENV['FASTLANE_SKIP_PACKAGE_IPA'].inspect}")
+    UI.message("ENV GYM_SKIP_ARCHIVE=#{ENV['GYM_SKIP_ARCHIVE'].inspect}")
+    UI.message("ENV SKIP_ARCHIVE=#{ENV['SKIP_ARCHIVE'].inspect}")    
+    
     # Perform XCode build
     gym(
       project: ENV["PROJECT"],
@@ -197,12 +215,18 @@ platform :apple do
       clean: true,
       export_method: "app-store",
       export_options: {
+        method: "app-store",
+        signingStyle: "manual",        
         provisioningProfiles: {
           ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]} macos"
         },
         compileBitcode: false
       }
     )
+    app_path = "./builds/macOS/#{ENV['SCHEME']}"
+    unless Dir.exist?(app_path)
+      UI.crash!("gym finished but APP was not produced at #{app_path}.")
+    end    
   end
 
   desc "Upload macOS app to TestFlight"
@@ -219,6 +243,12 @@ platform :apple do
 
   desc "Build tvOS app"
   lane :_build_tvos do
+    UI.message("ENV GYM_SKIP_PACKAGE_IPA=#{ENV['GYM_SKIP_PACKAGE_IPA'].inspect}")
+    UI.message("ENV SKIP_PACKAGE_IPA=#{ENV['SKIP_PACKAGE_IPA'].inspect}")
+    UI.message("ENV FASTLANE_SKIP_PACKAGE_IPA=#{ENV['FASTLANE_SKIP_PACKAGE_IPA'].inspect}")
+    UI.message("ENV GYM_SKIP_ARCHIVE=#{ENV['GYM_SKIP_ARCHIVE'].inspect}")
+    UI.message("ENV SKIP_ARCHIVE=#{ENV['SKIP_ARCHIVE'].inspect}")    
+    
     # Perform XCode build
     gym(
       project: ENV["PROJECT"],
@@ -233,12 +263,18 @@ platform :apple do
       clean: true,
       export_method: "app-store",
       export_options: {
+        method: "app-store",
+        signingStyle: "manual",        
         provisioningProfiles: {
           ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]} tvos"
         },
         compileBitcode: true
       }
     )
+    ipa_path = "./builds/tvOS/#{ENV['SCHEME']}.ipa"
+    unless File.exist?(ipa_path)
+      UI.crash!("gym finished but IPA was not produced at #{ipa_path}.")
+    end    
   end
 
   desc "Upload tvOS app to TestFlight"
