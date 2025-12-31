@@ -151,12 +151,10 @@ platform :apple do
       configuration: "Release",
       sdk: "iphoneos",
       destination: "generic/platform=iOS",
+      catalyst_platform: "ios",
       skip_package_ipa: false,
       output_directory: File.expand_path("../builds/iOS", __dir__),
       output_name: "#{ENV["SCHEME"]}",
-      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' IPHONEOS_DEPLOYMENT_TARGET=17.0",
-      catalyst_platform: "ios",
-      clean: true,
       export_method: "app-store",
       export_options: {
         method: "app-store",
@@ -165,7 +163,9 @@ platform :apple do
           ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]}"
         },
         compileBitcode: true
-      }
+      },
+      clean: true,
+      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' IPHONEOS_DEPLOYMENT_TARGET=17.0"
     )
     output_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
     UI.message("IPA_OUTPUT_PATH from gym: #{output_path}")
@@ -196,12 +196,10 @@ platform :apple do
       sdk: "macosx",
       #destination: "generic/platform=macOS,variant=Mac Catalyst",
       destination: "generic/platform=macOS",
+      #catalyst_platform: "macos",
       skip_package_ipa: false,
       output_directory: File.expand_path("../builds/macOS", __dir__),
       output_name: "#{ENV["SCHEME"]}",
-      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=10.15 EFFECTIVE_PLATFORM_NAME=''",
-      #catalyst_platform: "macos",
-      clean: true,
       export_method: "app-store",
       export_options: {
         method: "app-store",
@@ -210,7 +208,9 @@ platform :apple do
           ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]} macos"
         },
         compileBitcode: false
-      }
+      },
+      clean: true,
+      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=10.15 EFFECTIVE_PLATFORM_NAME=''"
     )
     output_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
     UI.message("IPA_OUTPUT_PATH from gym: #{output_path}")
@@ -235,6 +235,12 @@ platform :apple do
   lane :_build_tvos do
     # Perform XCode build
     gym(
+      silent: false,
+      suppress_xcode_output: false,
+      disable_xcpretty: true,
+      buildlog_path: File.expand_path("~/Library/Logs/gym", ENV["HOME"]),
+      xcodebuild_formatter: "xcbeautify",
+      
       project: ENV["PROJECT"],
       scheme: ENV["SCHEME"],
       configuration: "Release",
@@ -243,8 +249,6 @@ platform :apple do
       skip_package_ipa: false,
       output_directory: File.expand_path("../builds/tvOS", __dir__),
       output_name: "#{ENV["SCHEME"]}",
-      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' TVOS_DEPLOYMENT_TARGET=17.0",
-      clean: true,
       export_method: "app-store",
       export_options: {
         method: "app-store",
@@ -254,14 +258,16 @@ platform :apple do
         },
         compileBitcode: true
       },
-      silent: false,
-      disable_xcpretty: true,
-      output_style: "raw",
-      verbose: true
+      clean: true,
+      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' TVOS_DEPLOYMENT_TARGET=17.0"
     )
-    log = File.expand_path("~/Library/Logs/gym/#{ENV["SCHEME"]}-#{ENV["SCHEME"]}.log")
-    Actions.sh("grep -n \"exportArchive\\|Generated plist\\|gym_config\" -n #{log} || true")
+    
+    log_path = Actions.lane_context[SharedValues::XCODEBUILD_ARCHIVE]
+    UI.message("Archive: #{log_path}")
 
+    Actions.sh("ls -la ~/Library/Logs/gym || true")
+    Actions.sh("grep -R \"exportArchive\\|Generated plist file\" -n ~/Library/Logs/gym | tail -n 50 || true")
+    
     output_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
     UI.message("IPA_OUTPUT_PATH from gym: #{output_path}")
     unless output_path && output_path.include?("/tvOS/") && File.exist?(output_path)
