@@ -144,7 +144,15 @@ platform :apple do
   # Private lanes
   desc "Build iOS app"
   lane :_build_ios do
-    # Perform XCode build
+    # Output setup
+    archive_dir = File.expand_path("../builds/iOS", __dir__)
+    FileUtils.mkdir_p(archive_dir) 
+    UI.message("iOS archiving created at: #{archive_dir.inspect}")
+    export_dir = File.expand_path("../builds/iOS/export", __dir__) 
+    FileUtils.mkdir_p(export_dir) 
+    UI.message("iOS exporting at: #{export_dir}") 
+
+    # XCodeBuild archive
     gym(
       project: ENV["PROJECT"],
       scheme: ENV["SCHEME"],
@@ -152,26 +160,30 @@ platform :apple do
       sdk: "iphoneos",
       destination: "generic/platform=iOS",
       catalyst_platform: "ios",
-      skip_package_ipa: false,
-      output_directory: File.expand_path("../builds/iOS", __dir__),
-      output_name: "#{ENV["SCHEME"]}",
-      export_method: "app-store",
-      export_options: {
-        method: "app-store",
-        signingStyle: "manual",        
-        provisioningProfiles: {
-          ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]}"
-        },
-        compileBitcode: true
-      },
       clean: true,
+      skip_package_ipa: true,      
+      output_directory: archive_dir,
+      output_name: "#{ENV["SCHEME"]}",
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' IPHONEOS_DEPLOYMENT_TARGET=17.0"
     )
-    output_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
-    UI.message("IPA_OUTPUT_PATH from gym: #{output_path}")
-    unless output_path && output_path.include?("/iOS/") && File.exist?(output_path)
-      UI.crash!("gym reported IPA_OUTPUT_PATH=#{output_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
+    
+    # Validate archive
+    archive = Actions.lane_context[SharedValues::XCODEBUILD_ARCHIVE] 
+    UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive 
+    UI.crash!("gym returned an invalid XCODEBUILD_ARCHIVE #{archive.inspect}") unless archive.include?("/iOS/")
+    UI.crash!("gym returned XCODEBUILD_ARCHIVE #{archive.inspect} but archive does not exist") unless File.exist?(archive)    
+    UI.message("iOS archive created at: #{archive.inspect}") 
+
+    # XCodeBuild export from archive
+    with_export_options_plist("match AppStore #{ENV["APP_IDENTIFIER"]}") do |export_plist|
+      execute_command("xcrun xcodebuild -exportArchive -archivePath \"#{archive}\" -exportPath \"#{export_dir}\" -exportOptionsPlist \"#{export_plist}\" OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db'")
+      execute_command("ls -la #{export_dir}")
     end
+
+    # Validate export
+    export = File.join(export_dir, "#{ENV["SCHEME"]}.ipa")
+    UI.crash!("Archive does not exist") unless File.exist?(export)    
+    UI.message("iOS export created at: #{export.inspect}") 
   end
 
   desc "Upload iOS app to TestFlight"
@@ -179,7 +191,7 @@ platform :apple do
     # Upload iOS ipa
     upload_to_testflight(
       api_key: get_apple_app_store_key,
-      ipa: "./builds/iOS/#{ENV["SCHEME"]}.ipa",
+      ipa: File.expand_path("../builds/iOS/export/#{ENV["SCHEME"]}.ipa", __dir__),
       app_platform: "ios",
       changelog: $changelog,
       notify_external_testers: false
@@ -188,7 +200,15 @@ platform :apple do
 
   desc "Build macOS app"
   lane :_build_macos do
-    # Perform XCode build
+    # Output setup
+    archive_dir = File.expand_path("../builds/macOS", __dir__)
+    FileUtils.mkdir_p(archive_dir) 
+    UI.message("macOS archiving created at: #{archive_dir.inspect}")
+    export_dir = File.expand_path("../builds/macOS/export", __dir__) 
+    FileUtils.mkdir_p(export_dir) 
+    UI.message("macOS exporting at: #{export_dir}") 
+    
+    # XCodeBuild archive
     gym(
       project: ENV["PROJECT"],
       scheme: ENV["SCHEME"],
@@ -197,26 +217,30 @@ platform :apple do
       #destination: "generic/platform=macOS,variant=Mac Catalyst",
       destination: "generic/platform=macOS",
       #catalyst_platform: "macos",
-      skip_package_ipa: false,
+      clean: true,
+      skip_package_ipa: true,
       output_directory: File.expand_path("../builds/macOS", __dir__),
       output_name: "#{ENV["SCHEME"]}",
-      export_method: "app-store",
-      export_options: {
-        method: "app-store",
-        signingStyle: "manual",        
-        provisioningProfiles: {
-          ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]} macos"
-        },
-        compileBitcode: false
-      },
-      clean: true,
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=10.15 EFFECTIVE_PLATFORM_NAME=''"
     )
-    output_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
-    UI.message("IPA_OUTPUT_PATH from gym: #{output_path}")
-    unless output_path && output_path.include?("/macOS/") && File.exist?(output_path)
-      UI.crash!("gym reported IPA_OUTPUT_PATH=#{output_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
+    
+    # Validate archive
+    archive = Actions.lane_context[SharedValues::XCODEBUILD_ARCHIVE] 
+    UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive 
+    UI.crash!("gym returned an invalid XCODEBUILD_ARCHIVE #{archive.inspect}") unless archive.include?("/macOS/")
+    UI.crash!("gym returned XCODEBUILD_ARCHIVE #{archive.inspect} but archive does not exist") unless Dir.exist?(archive)
+    UI.message("macOS archive created at: #{archive.inspect}") 
+
+    # XCodeBuild export from archive
+    with_export_options_plist("match AppStore #{ENV["APP_IDENTIFIER"]} macos") do |export_plist|
+      execute_command("xcrun xcodebuild -exportArchive -archivePath \"#{archive}\" -exportPath \"#{export_dir}\" -exportOptionsPlist \"#{export_plist}\" OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db'")
+      execute_command("ls -la #{export_dir}")
     end
+
+    # Validate export
+    export = File.join(export_dir, "#{ENV["SCHEME"]}.pkg")
+    UI.crash!("Archive does not exist") unless File.exist?(export)
+    UI.message("iOS export created at: #{export.inspect}")     
   end
 
   desc "Upload macOS app to TestFlight"
@@ -224,7 +248,7 @@ platform :apple do
     # Upload macOS pkg
     upload_to_testflight(
       api_key: get_apple_app_store_key,
-      pkg: "./builds/macOS/#{ENV["SCHEME"]}.pkg",
+      pkg: File.expand_path("../builds/macOS/export/#{ENV["SCHEME"]}.pkg", __dir__),
       app_platform: "osx",
       changelog: $changelog,
       notify_external_testers: false
@@ -233,7 +257,15 @@ platform :apple do
 
   desc "Build tvOS app"
   lane :_build_tvos do
-    # Perform XCode build
+    # Output setup
+    archive_dir = File.expand_path("../builds/tvOS", __dir__)
+    FileUtils.mkdir_p(archive_dir) 
+    UI.message("tvOS archiving created at: #{archive_dir.inspect}")
+    export_dir = File.expand_path("../builds/tvOS/export", __dir__) 
+    FileUtils.mkdir_p(export_dir) 
+    UI.message("tvOS exporting at: #{export_dir}") 
+
+    # XCodeBuild archive
     gym(
       silent: false,
       suppress_xcode_output: false,
@@ -246,33 +278,35 @@ platform :apple do
       configuration: "Release",
       sdk: "appletvos",
       destination: "generic/platform=tvOS",
-      skip_package_ipa: false,
-      output_directory: File.expand_path("../builds/tvOS", __dir__),
-      output_name: "#{ENV["SCHEME"]}",
-      export_method: "app-store",
-      export_options: {
-        method: "app-store",
-        signingStyle: "manual",        
-        provisioningProfiles: {
-          ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]} tvos"
-        },
-        compileBitcode: true
-      },
       clean: true,
+      skip_package_ipa: true,      
+      output_directory: archive_dir,
+      output_name: "#{ENV["SCHEME"]}",
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' TVOS_DEPLOYMENT_TARGET=17.0"
     )
-    
+
     log_path = Actions.lane_context[SharedValues::XCODEBUILD_ARCHIVE]
     UI.message("Archive: #{log_path}")
-
     Actions.sh("ls -la ~/Library/Logs/gym || true")
     Actions.sh("grep -R \"exportArchive\\|Generated plist file\" -n ~/Library/Logs/gym | tail -n 50 || true")
     
-    output_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
-    UI.message("IPA_OUTPUT_PATH from gym: #{output_path}")
-    unless output_path && output_path.include?("/tvOS/") && File.exist?(output_path)
-      UI.crash!("gym reported IPA_OUTPUT_PATH=#{output_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
+    # Validate archive
+    archive = Actions.lane_context[SharedValues::XCODEBUILD_ARCHIVE] 
+    UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive 
+    UI.crash!("gym returned an invalid XCODEBUILD_ARCHIVE #{archive.inspect}") unless archive.include?("/tvOS/")
+    UI.crash!("gym returned XCODEBUILD_ARCHIVE #{archive.inspect} but archive does not exist") unless File.exist?(archive)    
+    UI.message("tvOS archive created at: #{archive.inspect}") 
+
+    # Export from archive
+    with_export_options_plist("match AppStore #{ENV["APP_IDENTIFIER"]} tvos") do |export_plist|
+      execute_command("xcrun xcodebuild -exportArchive -archivePath \"#{archive}\" -exportPath \"#{export_dir}\" -exportOptionsPlist \"#{export_plist}\" OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db'")
+      execute_command("ls -la #{export_dir}")
     end
+
+    # Validate export
+    export = File.join(export_dir, "#{ENV["SCHEME"]}.ipa")
+    UI.crash!("Archive does not exist") unless File.exist?(export)    
+    UI.message("tvOS export created at: #{export.inspect}")     
   end
 
   desc "Upload tvOS app to TestFlight"
@@ -280,7 +314,7 @@ platform :apple do
     # Upload tvOS ipa
     upload_to_testflight(
       api_key: get_apple_app_store_key,
-      ipa: "./builds/tvOS/#{ENV["SCHEME"]}.ipa",
+      ipa: File.expand_path("../builds/tvOS/export/#{ENV["SCHEME"]}.ipa", __dir__),
       app_platform: "appletvos",
       changelog: $changelog,
       notify_external_testers: false
@@ -439,6 +473,27 @@ platform :apple do
     output = StringIO.new
     doc.write(output, 2)
     output.string
+  end
+
+  def with_export_options_plist(profile)
+    Dir.mktmpdir("export-options") do |dir|
+      path = File.join(dir, "exportOptions.plist")
+  
+      plist_hash = {
+        "method" => "app-store",
+        "signingStyle" => "manual",
+        "compileBitcode" => true,
+        "provisioningProfiles" => {
+          ENV["APP_IDENTIFIER"] => profile
+        }
+      }
+  
+      plist = CFPropertyList::List.new
+      plist.value = CFPropertyList.guess(plist_hash)
+      File.write(path, plist.to_str(CFPropertyList::List::FORMAT_XML))
+  
+      yield path
+    end
   end
 
 end
