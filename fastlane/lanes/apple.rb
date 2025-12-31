@@ -74,12 +74,12 @@ platform :apple do
       end
     end
 
-    # Build macOS (Catalyst)
+    # Build macOS
     if macos
       begin
         _build_macos
       rescue StandardError => e
-        UI.error("macOS (Catalyst) build failed: #{e}")
+        UI.error("macOS build failed: #{e}")
         build_failures.push("macOS")
       end
     end
@@ -116,12 +116,12 @@ platform :apple do
       end
     end
 
-    # Upload macOS (Catalyst)
+    # Upload macOS
     if macos
       begin
         _upload_macos
       rescue StandardError => e
-        UI.error("macOS (Catalyst) upload failed: #{e}")
+        UI.error("macOS upload failed: #{e}")
         upload_failures.push("macOS")
       end
     end
@@ -187,17 +187,18 @@ platform :apple do
       scheme: ENV["SCHEME"],
       configuration: "Release",
       sdk: "macosx",
-      destination: "generic/platform=macOS,variant=Mac Catalyst",
+      #destination: "generic/platform=macOS,variant=Mac Catalyst",
+      destination: "generic/platform=macOS",
       skip_package_ipa: false,
       output_directory: "./builds/macOS",
       output_name: "#{ENV["SCHEME"]}",
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=10.15 EFFECTIVE_PLATFORM_NAME=''",
-      catalyst_platform: "macos",
+      #catalyst_platform: "macos",
       clean: true,
       export_method: "app-store",
       export_options: {
         provisioningProfiles: {
-          ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]} catalyst"
+          ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]} macos"
         },
         compileBitcode: false
       }
