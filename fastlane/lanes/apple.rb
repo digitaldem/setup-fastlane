@@ -144,12 +144,6 @@ platform :apple do
   # Private lanes
   desc "Build iOS app"
   lane :_build_ios do
-    UI.message("ENV GYM_SKIP_PACKAGE_IPA=#{ENV['GYM_SKIP_PACKAGE_IPA'].inspect}")
-    UI.message("ENV SKIP_PACKAGE_IPA=#{ENV['SKIP_PACKAGE_IPA'].inspect}")
-    UI.message("ENV FASTLANE_SKIP_PACKAGE_IPA=#{ENV['FASTLANE_SKIP_PACKAGE_IPA'].inspect}")
-    UI.message("ENV GYM_SKIP_ARCHIVE=#{ENV['GYM_SKIP_ARCHIVE'].inspect}")
-    UI.message("ENV SKIP_ARCHIVE=#{ENV['SKIP_ARCHIVE'].inspect}")    
-    
     # Perform XCode build
     gym(
       project: ENV["PROJECT"],
@@ -158,8 +152,8 @@ platform :apple do
       sdk: "iphoneos",
       destination: "generic/platform=iOS",
       skip_package_ipa: false,
-      output_directory: "./builds/iOS",
-      output_name: "#{ENV["SCHEME"]}.ipa",
+      output_directory: File.expand_path("../builds/iOS", __dir__),
+      output_name: "#{ENV["SCHEME"]}",
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' IPHONEOS_DEPLOYMENT_TARGET=17.0",
       catalyst_platform: "ios",
       clean: true,
@@ -173,10 +167,11 @@ platform :apple do
         compileBitcode: true
       }
     )
-    ipa_path = "./builds/iOS/#{ENV['SCHEME']}.ipa"
-    unless File.exist?(ipa_path)
-      UI.crash!("gym finished but IPA was not produced at #{ipa_path}.")
-    end        
+    ipa_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
+    UI.message("IPA_OUTPUT_PATH from gym: #{ipa_path}")
+    unless ipa_path && File.exist?(ipa_path)
+      UI.crash!("gym reported IPA_OUTPUT_PATH=#{ipa_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
+    end
   end
 
   desc "Upload iOS app to TestFlight"
@@ -193,12 +188,6 @@ platform :apple do
 
   desc "Build macOS app"
   lane :_build_macos do
-    UI.message("ENV GYM_SKIP_PACKAGE_IPA=#{ENV['GYM_SKIP_PACKAGE_IPA'].inspect}")
-    UI.message("ENV SKIP_PACKAGE_IPA=#{ENV['SKIP_PACKAGE_IPA'].inspect}")
-    UI.message("ENV FASTLANE_SKIP_PACKAGE_IPA=#{ENV['FASTLANE_SKIP_PACKAGE_IPA'].inspect}")
-    UI.message("ENV GYM_SKIP_ARCHIVE=#{ENV['GYM_SKIP_ARCHIVE'].inspect}")
-    UI.message("ENV SKIP_ARCHIVE=#{ENV['SKIP_ARCHIVE'].inspect}")    
-    
     # Perform XCode build
     gym(
       project: ENV["PROJECT"],
@@ -208,7 +197,7 @@ platform :apple do
       #destination: "generic/platform=macOS,variant=Mac Catalyst",
       destination: "generic/platform=macOS",
       skip_package_ipa: false,
-      output_directory: "./builds/macOS",
+      output_directory: File.expand_path("../builds/macOS", __dir__),
       output_name: "#{ENV["SCHEME"]}",
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=10.15 EFFECTIVE_PLATFORM_NAME=''",
       #catalyst_platform: "macos",
@@ -223,10 +212,11 @@ platform :apple do
         compileBitcode: false
       }
     )
-    app_path = "./builds/macOS/#{ENV['SCHEME']}"
-    unless Dir.exist?(app_path)
-      UI.crash!("gym finished but APP was not produced at #{app_path}.")
-    end    
+    app_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
+    UI.message("IPA_OUTPUT_PATH from gym: #{app_path}")
+    unless ipa_path && File.exist?(app_path)
+      UI.crash!("gym reported IPA_OUTPUT_PATH=#{app_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
+    end
   end
 
   desc "Upload macOS app to TestFlight"
@@ -243,12 +233,6 @@ platform :apple do
 
   desc "Build tvOS app"
   lane :_build_tvos do
-    UI.message("ENV GYM_SKIP_PACKAGE_IPA=#{ENV['GYM_SKIP_PACKAGE_IPA'].inspect}")
-    UI.message("ENV SKIP_PACKAGE_IPA=#{ENV['SKIP_PACKAGE_IPA'].inspect}")
-    UI.message("ENV FASTLANE_SKIP_PACKAGE_IPA=#{ENV['FASTLANE_SKIP_PACKAGE_IPA'].inspect}")
-    UI.message("ENV GYM_SKIP_ARCHIVE=#{ENV['GYM_SKIP_ARCHIVE'].inspect}")
-    UI.message("ENV SKIP_ARCHIVE=#{ENV['SKIP_ARCHIVE'].inspect}")    
-    
     # Perform XCode build
     gym(
       project: ENV["PROJECT"],
@@ -257,8 +241,8 @@ platform :apple do
       sdk: "appletvos",
       destination: "generic/platform=tvOS",
       skip_package_ipa: false,
-      output_directory: "./builds/tvOS",
-      output_name: "#{ENV["SCHEME"]}.ipa",
+      output_directory: File.expand_path("../builds/tvOS", __dir__),
+      output_name: "#{ENV["SCHEME"]}",
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' TVOS_DEPLOYMENT_TARGET=17.0",
       clean: true,
       export_method: "app-store",
@@ -271,10 +255,11 @@ platform :apple do
         compileBitcode: true
       }
     )
-    ipa_path = "./builds/tvOS/#{ENV['SCHEME']}.ipa"
-    unless File.exist?(ipa_path)
-      UI.crash!("gym finished but IPA was not produced at #{ipa_path}.")
-    end    
+    ipa_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
+    UI.message("IPA_OUTPUT_PATH from gym: #{ipa_path}")
+    unless ipa_path && File.exist?(ipa_path)
+      UI.crash!("gym reported IPA_OUTPUT_PATH=#{ipa_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
+    end
   end
 
   desc "Upload tvOS app to TestFlight"
