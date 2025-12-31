@@ -167,10 +167,10 @@ platform :apple do
         compileBitcode: true
       }
     )
-    ipa_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
-    UI.message("IPA_OUTPUT_PATH from gym: #{ipa_path}")
-    unless ipa_path && File.exist?(ipa_path)
-      UI.crash!("gym reported IPA_OUTPUT_PATH=#{ipa_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
+    output_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
+    UI.message("IPA_OUTPUT_PATH from gym: #{output_path}")
+    unless output_path && output_path.include?("/iOS/") && File.exist?(output_path)
+      UI.crash!("gym reported IPA_OUTPUT_PATH=#{output_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
     end
   end
 
@@ -212,10 +212,10 @@ platform :apple do
         compileBitcode: false
       }
     )
-    app_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
-    UI.message("IPA_OUTPUT_PATH from gym: #{app_path}")
-    unless ipa_path && File.exist?(app_path)
-      UI.crash!("gym reported IPA_OUTPUT_PATH=#{app_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
+    output_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
+    UI.message("IPA_OUTPUT_PATH from gym: #{output_path}")
+    unless output_path && output_path.include?("/macOS/") && File.exist?(output_path)
+      UI.crash!("gym reported IPA_OUTPUT_PATH=#{output_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
     end
   end
 
@@ -253,12 +253,19 @@ platform :apple do
           ENV["APP_IDENTIFIER"] => "match AppStore #{ENV["APP_IDENTIFIER"]} tvos"
         },
         compileBitcode: true
-      }
+      },
+      silent: false,
+      disable_xcpretty: true,
+      output_style: "raw",
+      verbose: true
     )
-    ipa_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
-    UI.message("IPA_OUTPUT_PATH from gym: #{ipa_path}")
-    unless ipa_path && File.exist?(ipa_path)
-      UI.crash!("gym reported IPA_OUTPUT_PATH=#{ipa_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
+    log = File.expand_path("~/Library/Logs/gym/#{ENV["SCHEME"]}-#{ENV["SCHEME"]}.log")
+    Actions.sh("grep -n \"exportArchive\\|Generated plist\\|gym_config\" -n #{log} || true")
+
+    output_path = Actions.lane_context[SharedValues::IPA_OUTPUT_PATH]
+    UI.message("IPA_OUTPUT_PATH from gym: #{output_path}")
+    unless output_path && output_path.include?("/tvOS/") && File.exist?(output_path)
+      UI.crash!("gym reported IPA_OUTPUT_PATH=#{output_path.inspect} but file does not exist. pwd=#{Dir.pwd}")
     end
   end
 
