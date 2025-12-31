@@ -11,6 +11,7 @@ opt_out_usage
 #     https://docs.fastlane.tools/plugins/available-plugins
 #
 require "fastlane"
+require "cfpropertylist"
 require "dotenv"
 require "fileutils"
 require "git"
