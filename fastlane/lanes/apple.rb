@@ -211,7 +211,7 @@ platform :apple do
       clean: true,
       skip_package_ipa: true,
       build_path: build_dir,
-      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=10.15 EFFECTIVE_PLATFORM_NAME=''"
+      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=15.0 EFFECTIVE_PLATFORM_NAME=''"
     )
     
     # Validate archive
