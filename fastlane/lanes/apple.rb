@@ -460,6 +460,8 @@ platform :apple do
           plist[:signingStyle] = "manual"
           plist[:compileBitcode] = true
           plist[:provisioningProfiles] = { ENV["APP_IDENTIFIER"] => profile }
+          plist[:signingCertificate] = "Apple Distribution"
+          plist[:installerSigningCertificate] = "3rd Party Mac Developer Installer"
         end
       )  
       yield plist_file
