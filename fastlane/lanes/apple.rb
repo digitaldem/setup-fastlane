@@ -209,7 +209,7 @@ platform :apple do
       destination: "generic/platform=macOS",  # variant=Mac Catalyst",
       #catalyst_platform: "macos",
       clean: true,
-      skip_package_ipa: true,
+      skip_package_pkg: true,
       build_path: build_dir,
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=15.0 EFFECTIVE_PLATFORM_NAME=''"
     )
