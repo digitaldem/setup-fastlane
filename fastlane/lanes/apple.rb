@@ -455,7 +455,8 @@ platform :apple do
       update_plist(
         plist_path: plist_file,
         block: proc do |plist|
-          plist[:method] = "app-store"
+          #plist[:method] = "app-store"
+          plist[:method] = "app-store-connect"
           plist[:signingStyle] = "manual"
           plist[:compileBitcode] = true
           plist[:provisioningProfiles] = { ENV["APP_IDENTIFIER"] => profile }
