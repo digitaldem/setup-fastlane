@@ -55,7 +55,7 @@ platform :apple do
     # Increment version patch number and update xcodeproj MARKETING_VERSION
     minimum_version = get_minimum_version()
     version = [Gem::Version.new(specified_version), Gem::Version.new(minimum_version)].max
-    
+
     xcodeproj = Xcodeproj::Project.open("../#{ENV["PROJECT"]}")
     xcodeproj.targets.each do |target|
       target.build_configurations.each do |config|
@@ -93,7 +93,7 @@ platform :apple do
         build_failures.push("tvOS")
       end
     end
-    
+
     if build_failures.any?
       UI.crash!("Build(s) for the following targets failed: [#{build_failures.join(" ")}]")
     end
@@ -135,7 +135,7 @@ platform :apple do
         upload_failures.push("tvOS")
       end
     end
-    
+
     if upload_failures.any?
       UI.crash!("Build(s) for the following targets failed: [#{upload_failures.join(" ")}]")
     end
@@ -146,7 +146,7 @@ platform :apple do
   lane :_build_ios do
     # Output setup
     build_dir = File.expand_path("../../builds/iOS", __dir__)
-    FileUtils.mkdir_p(build_dir) 
+    FileUtils.mkdir_p(build_dir)
     UI.message("Building at: #{build_dir.inspect}")
 
     # XCodeBuild archive
@@ -158,17 +158,17 @@ platform :apple do
       destination: "generic/platform=iOS",
       catalyst_platform: "ios",
       clean: true,
-      skip_package_ipa: true,      
+      skip_package_ipa: true,
       build_path: build_dir,
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' IPHONEOS_DEPLOYMENT_TARGET=17.0"
     )
-    
+
     # Validate archive
-    archive = Actions.lane_context[SharedValues::XCODEBUILD_ARCHIVE] 
-    UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive 
+    archive = Actions.lane_context[SharedValues::XCODEBUILD_ARCHIVE]
+    UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive
     UI.crash!("gym returned an invalid XCODEBUILD_ARCHIVE #{archive.inspect}") unless archive.include?("/iOS/")
-    UI.crash!("gym returned XCODEBUILD_ARCHIVE #{archive.inspect} but archive does not exist") unless File.exist?(archive)    
-    # UI.message("iOS archive created at: #{archive.inspect}") 
+    UI.crash!("gym returned XCODEBUILD_ARCHIVE #{archive.inspect} but archive does not exist") unless File.exist?(archive)
+    # UI.message("iOS archive created at: #{archive.inspect}")
 
     # XCodeBuild export from archive
     with_export_options("match AppStore #{ENV["APP_IDENTIFIER"]}") do |plist|
@@ -177,8 +177,8 @@ platform :apple do
 
     # Validate export
     export = File.join(build_dir, "#{ENV["SCHEME"]}.ipa")
-    UI.crash!("Export artifact does not exist") unless File.exist?(export)    
-    UI.message("IPA created at: #{export.inspect}") 
+    UI.crash!("Export artifact does not exist") unless File.exist?(export)
+    UI.message("IPA created at: #{export.inspect}")
   end
 
   desc "Upload iOS app to TestFlight"
@@ -197,9 +197,9 @@ platform :apple do
   lane :_build_macos do
     # Output setup
     build_dir = File.expand_path("../../builds/macOS", __dir__)
-    FileUtils.mkdir_p(build_dir) 
+    FileUtils.mkdir_p(build_dir)
     UI.message("Building at: #{build_dir.inspect}")
-    
+
     # XCodeBuild archive
     gym(
       project: ENV["PROJECT"],
@@ -213,13 +213,13 @@ platform :apple do
       build_path: build_dir,
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' MACOSX_DEPLOYMENT_TARGET=15.0 EFFECTIVE_PLATFORM_NAME=''"
     )
-    
+
     # Validate archive
-    archive = Actions.lane_context[SharedValues::XCODEBUILD_ARCHIVE] 
-    UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive 
+    archive = Actions.lane_context[SharedValues::XCODEBUILD_ARCHIVE]
+    UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive
     UI.crash!("gym returned an invalid XCODEBUILD_ARCHIVE #{archive.inspect}") unless archive.include?("/macOS/")
     UI.crash!("gym returned XCODEBUILD_ARCHIVE #{archive.inspect} but archive does not exist") unless Dir.exist?(archive)
-    # UI.message("macOS archive created at: #{archive.inspect}") 
+    # UI.message("macOS archive created at: #{archive.inspect}")
 
     # XCodeBuild export from archive
     with_export_options("match AppStore #{ENV["APP_IDENTIFIER"]} macos") do |plist|
@@ -229,7 +229,7 @@ platform :apple do
     # Validate export
     export = File.join(build_dir, "#{ENV["SCHEME"]}.pkg")
     UI.crash!("Export artifact does not exist") unless File.exist?(export)
-    UI.message("PKG created at: #{export.inspect}")     
+    UI.message("PKG created at: #{export.inspect}")
   end
 
   desc "Upload macOS app to TestFlight"
@@ -248,7 +248,7 @@ platform :apple do
   lane :_build_tvos do
     # Output setup
     build_dir = File.expand_path("../../builds/tvOS", __dir__)
-    FileUtils.mkdir_p(build_dir) 
+    FileUtils.mkdir_p(build_dir)
     UI.message("Building at: #{build_dir.inspect}")
 
     # XCodeBuild archive
@@ -259,17 +259,17 @@ platform :apple do
       sdk: "appletvos",
       destination: "generic/platform=tvOS",
       clean: true,
-      skip_package_ipa: true,      
+      skip_package_ipa: true,
       build_path: build_dir,
       xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' TVOS_DEPLOYMENT_TARGET=17.0"
     )
 
     # Validate archive
-    archive = Actions.lane_context[SharedValues::XCODEBUILD_ARCHIVE] 
-    UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive 
+    archive = Actions.lane_context[SharedValues::XCODEBUILD_ARCHIVE]
+    UI.crash!("gym did not return XCODEBUILD_ARCHIVE") unless archive
     UI.crash!("gym returned an invalid XCODEBUILD_ARCHIVE #{archive.inspect}") unless archive.include?("/tvOS/")
-    UI.crash!("gym returned XCODEBUILD_ARCHIVE #{archive.inspect} but archive does not exist") unless File.exist?(archive)    
-    # UI.message("tvOS archive created at: #{archive.inspect}") 
+    UI.crash!("gym returned XCODEBUILD_ARCHIVE #{archive.inspect} but archive does not exist") unless File.exist?(archive)
+    # UI.message("tvOS archive created at: #{archive.inspect}")
 
     # Export from archive
     with_export_options("match AppStore #{ENV["APP_IDENTIFIER"]} tvos") do |plist|
@@ -278,8 +278,8 @@ platform :apple do
 
     # Validate export
     export = File.join(build_dir, "#{ENV["SCHEME"]}.ipa")
-    UI.crash!("Export artifact does not exist") unless File.exist?(export)    
-    UI.message("IPA created at: #{export.inspect}")     
+    UI.crash!("Export artifact does not exist") unless File.exist?(export)
+    UI.message("IPA created at: #{export.inspect}")
   end
 
   desc "Upload tvOS app to TestFlight"
@@ -297,7 +297,7 @@ platform :apple do
   # Helper functions
   def select_iphone_simulator
     iphone_simulators = []
-    
+
     # Get list of available simulators
     simctl_list = JSON.parse(Actions.sh_no_action("xcrun simctl list devices -j", log: false))
     simctl_list["devices"].each do |runtime, simulators|
@@ -314,10 +314,10 @@ platform :apple do
     if iphone_simulators.empty?
       UI.user_error!("Could not find an appropriate simulator.")
     end
-    
+
     # Select "latest" simulator and return the device id
     device = iphone_simulators.sort_by do |iphone|
-      model = 
+      model =
         if iphone["model"].include?(" Pro")
           2
         elsif iphone["model"].include?(" SE")
@@ -448,6 +448,19 @@ platform :apple do
     output.string
   end
 
+  def find_profile_uuid(profile_name, file_extension)
+    files = Dir.glob(File.join(File.expand_path("~/Library/Developer/Xcode/UserData/Provisioning Profiles"), "*.#{file_extension}"))
+    files.each do |file|
+      name = extract_name_from_profile_file(file)
+      next unless name == profile_name
+      return File.basename(file).split(".").first
+    end
+  end
+
+  def extract_name_from_profile_file(file)
+    Actions.sh_no_action("/usr/libexec/PlistBuddy -c \"print :Name\" /dev/stdin <<< \"$(security cms -D -i #{file} 2>/dev/null)\"", log: false).to_s.strip
+  end
+
   def with_export_options(profile)
     Dir.mktmpdir("export-options") do |dir|
       plist_file = File.join(dir, "exportOptions.plist")
@@ -463,7 +476,7 @@ platform :apple do
           plist[:signingCertificate] = "Apple Distribution"
           plist[:installerSigningCertificate] = "3rd Party Mac Developer Installer"
         end
-      )  
+      )
       yield plist_file
     end
   end
