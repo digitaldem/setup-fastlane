@@ -185,6 +185,8 @@ platform :flutter do
     Tempfile.open(["temp", ".json"]) do |tempfile|
       tempfile.write(get_google_play_store_key().to_json())
       tempfile.flush
+      
+      # Publish artifact to internal track
       supply(
         json_key: tempfile.path,
         aab: aab,
@@ -193,6 +195,14 @@ platform :flutter do
         version_name: "Version #{version.to_s} (#{number.to_s})",
         track: "internal",
         release_status: "completed",
+      )
+      
+      # Auto-promote to closed testing track
+      supply(
+        json_key: tempfile.path,
+        package_name: ENV["APP_IDENTIFIER"],
+        track: "internal",
+        track_promote_to: "alpha",
       )
     end
   end
