@@ -189,6 +189,7 @@ platform :apple do
       ipa: File.expand_path("../../builds/iOS/#{ENV["SCHEME"]}.ipa", __dir__),
       app_platform: "ios",
       changelog: $changelog,
+      skip_waiting_for_build_processing: true,
       notify_external_testers: false
     )
   end
@@ -240,6 +241,7 @@ platform :apple do
       pkg: File.expand_path("../../builds/macOS/#{ENV["SCHEME"]}.pkg", __dir__),
       app_platform: "osx",
       changelog: $changelog,
+      skip_waiting_for_build_processing: true,
       notify_external_testers: false
     )
   end
@@ -290,6 +292,7 @@ platform :apple do
       ipa: File.expand_path("../../builds/tvOS/#{ENV["SCHEME"]}.ipa", __dir__),
       app_platform: "appletvos",
       changelog: $changelog,
+      skip_waiting_for_build_processing: true,
       notify_external_testers: false
     )
   end
