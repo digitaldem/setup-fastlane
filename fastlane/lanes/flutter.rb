@@ -162,6 +162,7 @@ platform :flutter do
       ipa: ipa,
       app_platform: "ios",
       changelog: $changelog,
+      skip_waiting_for_build_processing: true,
       notify_external_testers: false
     )
   end
