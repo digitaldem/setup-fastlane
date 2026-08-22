@@ -142,6 +142,8 @@ lane :initial_provisioning do |options|
 
       # Create Apple signing certs and provisioning profiles with match
       apple_app_store_key = get_apple_app_store_key()
+
+      app_identifiers = get_app_identifiers()
       apple.each do |platform|
         match(
           keychain_name: ENV["KEYCHAIN"],
@@ -149,7 +151,7 @@ lane :initial_provisioning do |options|
           git_url: ENV["KEYS_GIT_URL"],
           git_full_name: git_user[0],
           git_user_email: git_user[1],
-          app_identifier: ENV["APP_IDENTIFIER"],
+          app_identifier: app_identifiers,
           api_key: apple_app_store_key,
           platform: platform,
           type: "development",
@@ -166,7 +168,7 @@ lane :initial_provisioning do |options|
           git_url: ENV["KEYS_GIT_URL"],
           git_full_name: git_user[0],
           git_user_email: git_user[1],
-          app_identifier: ENV["APP_IDENTIFIER"],
+          app_identifier: app_identifiers,
           api_key: apple_app_store_key,
           platform: platform,
           type: "appstore",
@@ -235,13 +237,15 @@ lane :import_signingassets do |options|
 
       # Install Apple certs and profiles from the repo
       apple_app_store_key = get_apple_app_store_key()
+
+      app_identifiers = get_app_identifiers()
       apple.each do |platform|
         begin
           match(
             keychain_name: ENV["KEYCHAIN"],
             keychain_password: ENV["MATCH_PASSWORD"],
             git_url: $signing_assets_path,
-            app_identifier: ENV["APP_IDENTIFIER"],
+            app_identifier: app_identifiers,
             api_key: apple_app_store_key,
             platform: platform,
             type: "development",
@@ -255,7 +259,7 @@ lane :import_signingassets do |options|
             keychain_name: ENV["KEYCHAIN"],
             keychain_password: ENV["MATCH_PASSWORD"],
             git_url: $signing_assets_path,
-            app_identifier: ENV["APP_IDENTIFIER"],
+            app_identifier: app_identifiers,
             api_key: apple_app_store_key,
             platform: platform,
             type: "appstore",
@@ -317,6 +321,11 @@ def get_google_play_store_key()
   # Google Play Store API setup
   key = ENV["PLAY_STORE_KEY"] || "{}"
   JSON.parse(key)
+end
+
+def get_app_identifiers()
+  suffixes = (ENV["APP_EXTENSIONS"] || "").split(",").map(&:strip).reject(&:empty?)
+  [ENV["APP_IDENTIFIER"]] + suffixes.map { |s| "#{ENV["APP_IDENTIFIER"]}.#{s}" }
 end
 
 def get_minimum_version()
