@@ -160,7 +160,7 @@ platform :apple do
       clean: true,
       skip_package_ipa: true,
       build_path: build_dir,
-      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' IPHONEOS_DEPLOYMENT_TARGET=17.0"
+      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db'"
     )
 
     # Validate archive
@@ -263,7 +263,7 @@ platform :apple do
       clean: true,
       skip_package_ipa: true,
       build_path: build_dir,
-      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db' TVOS_DEPLOYMENT_TARGET=17.0"
+      xcargs: "OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db'"
     )
 
     # Validate archive
