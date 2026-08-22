@@ -171,7 +171,7 @@ platform :apple do
     # UI.message("iOS archive created at: #{archive.inspect}")
 
     # XCodeBuild export from archive
-    with_export_options("match AppStore #{ENV["APP_IDENTIFIER"]}") do |plist|
+    with_export_options do |plist|
       execute_command("xcrun xcodebuild -exportArchive -archivePath \"#{archive}\" -exportPath \"#{build_dir}\" -exportOptionsPlist \"#{plist}\" OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db'")
     end
 
@@ -223,7 +223,7 @@ platform :apple do
     # UI.message("macOS archive created at: #{archive.inspect}")
 
     # XCodeBuild export from archive
-    with_export_options("match AppStore #{ENV["APP_IDENTIFIER"]} macos") do |plist|
+    with_export_options("macos") do |plist|
       execute_command("xcrun xcodebuild -exportArchive -archivePath \"#{archive}\" -exportPath \"#{build_dir}\" -exportOptionsPlist \"#{plist}\" OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db'")
     end
 
@@ -274,7 +274,7 @@ platform :apple do
     # UI.message("tvOS archive created at: #{archive.inspect}")
 
     # Export from archive
-    with_export_options("match AppStore #{ENV["APP_IDENTIFIER"]} tvos") do |plist|
+    with_export_options("tvos") do |plist|
       execute_command("xcrun xcodebuild -exportArchive -archivePath \"#{archive}\" -exportPath \"#{build_dir}\" -exportOptionsPlist \"#{plist}\" OTHER_CODE_SIGN_FLAGS='--keychain #{$keychains_path}/#{ENV["KEYCHAIN"]}-db'")
     end
 
@@ -464,7 +464,11 @@ platform :apple do
     Actions.sh_no_action("/usr/libexec/PlistBuddy -c \"print :Name\" /dev/stdin <<< \"$(security cms -D -i #{file} 2>/dev/null)\"", log: false).to_s.strip
   end
 
-  def with_export_options(profile)
+  def with_export_options(platform = nil)
+    profiles = get_app_identifiers().map do |identifier|
+      [identifier, ["match AppStore", identifier, platform].compact.join(" ")]
+    end.to_h
+
     Dir.mktmpdir("export-options") do |dir|
       plist_file = File.join(dir, "exportOptions.plist")
       Actions.sh_no_action("/usr/libexec/PlistBuddy -c \"Clear dict\" \"#{plist_file}\"", log: false)
@@ -475,7 +479,7 @@ platform :apple do
           plist[:method] = "app-store-connect"
           plist[:signingStyle] = "manual"
           plist[:compileBitcode] = true
-          plist[:provisioningProfiles] = { ENV["APP_IDENTIFIER"] => profile }
+          plist[:provisioningProfiles] = profiles
           plist[:signingCertificate] = "Apple Distribution"
           plist[:installerSigningCertificate] = "3rd Party Mac Developer Installer"
         end
